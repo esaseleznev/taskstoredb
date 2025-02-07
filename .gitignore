@@ -25,6 +25,6 @@ go.work.sum
 .env
 
 #vscode settings
-**/.vscod
+**/.vscode
 #macos
 **/.DS_Store
