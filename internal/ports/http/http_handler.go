@@ -3,29 +3,53 @@ package ports
 import (
 	"net/http"
 
-	"github.com/esaseleznev/taskstoredb/internal/app/command"
+	"github.com/esaseleznev/taskstoredb/internal/domain"
 )
 
-type AddTask struct {
-	Group string            `json:"g"`
-	Param map[string]string `json:"p"`
-	Kind  string            `json:"k"`
+func (h HttpServer) Add() handlerFunc {
+	type request struct {
+		Group string            `json:"g"`
+		Param map[string]string `json:"p"`
+		Kind  string            `json:"k"`
+	}
+	type response struct {
+		Id string `json:"id"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) error {
+		t, err := decode[request](r)
+		if err != nil {
+			return err
+		}
+
+		id, err := h.app.Commands.AddTask.Handle(t.Group, t.Kind, t.Param)
+		if err != nil {
+			return err
+		}
+
+		return encode(w, int(http.StatusOK), response{Id: id})
+	}
 }
 
-func (h HttpServer) Add() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		t, err := decode[AddTask](r)
+func (h HttpServer) Update() handlerFunc {
+	type request struct {
+		Id     string            `json:"id"`
+		Group  string            `json:"g"`
+		Status int               `json:"s"`
+		Param  map[string]string `json:"p"`
+		Error  *string           `json:"e"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) error {
+		t, err := decode[request](r)
 		if err != nil {
-			_ = encode(w, int(http.StatusBadRequest), NewErrorResult(err))
-			return
+			return err
 		}
 
-		id, err := h.app.Commands.AddTask.Handle(command.AddTask{Group: t.Group, Param: t.Param, Kind: t.Kind})
+		err = h.app.Commands.UpdateTask.Handle(t.Id, t.Group, domain.Status(t.Status), t.Param, t.Error)
 		if err != nil {
-			_ = encode(w, int(http.StatusBadRequest), NewErrorResult(err))
-			return
+			return err
 		}
 
-		encode(w, int(http.StatusOK), NewIdResult(id))
+		w.WriteHeader(http.StatusOK)
+		return nil
 	}
 }

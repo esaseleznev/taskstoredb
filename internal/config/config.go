@@ -11,24 +11,24 @@ type Config struct {
 		Path string
 		Kind string
 	}
+
 	Http struct {
 		Port string
-		Host string
 	}
 
 	Cluster struct {
 		Servers []string
+		Current string
 	}
 }
 
 func NewConfig() Config {
 	config := Config{}
-
 	pathDb := flag.String("pdb", "", "path db")
 	kindDb := flag.String("kdb", "", "kind db")
 	port := flag.String("sp", "", "http port")
+	protocol := flag.String("protocol", "", "http or https")
 	servers := flag.String("srvs", "", "cluster servers")
-	flag.Parse()
 	flag.Parse()
 
 	if *pathDb == "" {
@@ -42,7 +42,6 @@ func NewConfig() Config {
 		}
 	}
 	config.Db.Kind = *kindDb
-	config.Db.Path = *pathDb
 
 	host, err := os.Hostname()
 	if err != nil {
@@ -53,16 +52,20 @@ func NewConfig() Config {
 			panic("Http port not specified")
 		}
 	}
-	config.Http.Host = host
+	if *protocol == "" {
+		*protocol = "http"
+	}
+
+	config.Db.Path = *pathDb + "/" + host
 	config.Http.Port = *port
+	config.Cluster.Current = *protocol + "://" + host + ":" + *port
 
 	if *servers == "" {
 		if *servers = os.Getenv("TSB_SRVS"); *servers == "" {
-			*servers = host + ":" + *port
+			*servers = config.Cluster.Current
 		}
 	}
 	config.Cluster.Servers = strings.Split(*servers, ",")
 
 	return config
-
 }

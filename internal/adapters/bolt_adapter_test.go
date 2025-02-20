@@ -7,11 +7,11 @@ import (
 	"os"
 	"testing"
 
-	bolt "go.etcd.io/bbolt"
+	bbolt "go.etcd.io/bbolt"
 )
 
-func TestBoltRepository_OwnerReg(t *testing.T) {
-	path, db, repository, err := initBoltDb()
+func TestBoltAdapter_OwnerReg(t *testing.T) {
+	path, db, adapter, err := initBoltDb()
 	defer os.RemoveAll(path)
 	if err != nil {
 		t.Fatal(err)
@@ -20,12 +20,12 @@ func TestBoltRepository_OwnerReg(t *testing.T) {
 	kinds := []string{"one", "two", "three", "fore"}
 	owner := "testowner"
 
-	err = repository.OwnerReg(owner, kinds)
+	err = adapter.OwnerReg(owner, kinds)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = db.View(func(tx *bolt.Tx) error {
+	err = db.View(func(tx *bbolt.Tx) error {
 		c := tx.Bucket([]byte(prefixOwner))
 		for _, itr := range kinds {
 			v := c.Get([]byte(itr + "-" + owner))
@@ -39,15 +39,13 @@ func TestBoltRepository_OwnerReg(t *testing.T) {
 		}
 		return nil
 	})
-
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }
 
-func TestBoltRepository_Add(t *testing.T) {
-	path, db, repository, err := initBoltDb()
+func TestBoltAdapter_Add(t *testing.T) {
+	path, db, adapter, err := initBoltDb()
 	defer os.RemoveAll(path)
 	if err != nil {
 		t.Fatal(err)
@@ -55,17 +53,17 @@ func TestBoltRepository_Add(t *testing.T) {
 
 	groupIn := "12345"
 
-	_ = repository.OwnerReg("100", []string{"TEST"})
-	_ = repository.OwnerReg("101", []string{"TEST"})
-	_ = repository.OwnerReg("102", []string{"TEST"})
-	_ = repository.OwnerReg("103", []string{"TEST"})
+	_ = adapter.OwnerReg("100", []string{"TEST"})
+	_ = adapter.OwnerReg("101", []string{"TEST"})
+	_ = adapter.OwnerReg("102", []string{"TEST"})
+	_ = adapter.OwnerReg("103", []string{"TEST"})
 
 	for i := 1; i < 5; i++ {
-		id, err := repository.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		id, err := adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = db.View(func(tx *bolt.Tx) error {
+		err = db.View(func(tx *bbolt.Tx) error {
 			c := tx.Bucket([]byte(prefixTask))
 			v := c.Get([]byte(id))
 			if v == nil {
@@ -78,11 +76,10 @@ func TestBoltRepository_Add(t *testing.T) {
 			t.Errorf("not correct add task")
 		}
 	}
-
 }
 
-func TestBoltRepository_GetFirstInGroup(t *testing.T) {
-	path, _, repository, err := initBoltDb()
+func TestBoltAdapter_GetFirstInGroup(t *testing.T) {
+	path, _, adapter, err := initBoltDb()
 	defer os.RemoveAll(path)
 	if err != nil {
 		t.Fatal(err)
@@ -90,21 +87,21 @@ func TestBoltRepository_GetFirstInGroup(t *testing.T) {
 
 	groupIn := "12345"
 
-	_ = repository.OwnerReg("100", []string{"TEST"})
+	_ = adapter.OwnerReg("100", []string{"TEST"})
 
-	idIn, err := repository.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+	idIn, err := adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	for i := 1; i < 3; i++ {
-		_, err := repository.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		_, err := adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	idOut, err := repository.GetFirstInGroup(groupIn)
+	idOut, err := adapter.GetFirstInGroup(groupIn)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,9 +111,9 @@ func TestBoltRepository_GetFirstInGroup(t *testing.T) {
 	}
 }
 
-func initBoltDb() (path string, db *bolt.DB, repository *BoltRepository, err error) {
+func initBoltDb() (path string, db *bbolt.DB, adapter *BoltAdapter, err error) {
 	path = tempfile("bolt")
-	db, err = bolt.Open(path, 0o600, nil)
-	repository = NewBoltRepository(db)
-	return path, db, repository, err
+	db, err = bbolt.Open(path, 0o600, nil)
+	adapter = NewBoltAdapter(db)
+	return path, db, adapter, err
 }

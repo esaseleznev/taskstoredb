@@ -13,7 +13,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-type LevelRepository struct {
+type LevelAdapter struct {
 	db    *leveldb.DB
 	mu    *sync.Mutex
 	ts    uint64
@@ -21,15 +21,15 @@ type LevelRepository struct {
 	kinds map[string]*roundRobin
 }
 
-func NewLevelRepository(db *leveldb.DB) *LevelRepository {
+func NewLevelAdapter(db *leveldb.DB) *LevelAdapter {
 	if db == nil {
 		panic("missing db")
 	}
 
-	return &LevelRepository{db: db, mu: &sync.Mutex{}, kinds: make(map[string]*roundRobin)}
+	return &LevelAdapter{db: db, mu: &sync.Mutex{}, kinds: make(map[string]*roundRobin)}
 }
 
-func (l LevelRepository) Get(id string) (tasks *entity.Task, err error) {
+func (l LevelAdapter) Get(id string) (tasks *entity.Task, err error) {
 	v, err := l.db.Get([]byte(id), nil)
 	if err == errors.ErrNotFound {
 		return
@@ -47,7 +47,7 @@ func (l LevelRepository) Get(id string) (tasks *entity.Task, err error) {
 	return &task, err
 }
 
-func (l LevelRepository) Pool(owner string, kind string, size uint) (tasks []entity.Task, err error) {
+func (l LevelAdapter) Pool(owner string, kind string, size uint) (tasks []entity.Task, err error) {
 	tasks = make([]entity.Task, 0)
 	prefix := prefixTask + "-" + kind + "-"
 	r := util.BytesPrefix([]byte(prefix))
@@ -86,7 +86,7 @@ out:
 	return tasks, err
 }
 
-func (l LevelRepository) GetFirstInGroup(group string) (id string, err error) {
+func (l LevelAdapter) GetFirstInGroup(group string) (id string, err error) {
 	prefix := prefixGroup + "-" + group + "-"
 	iter := l.db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)
 	if iter.Next() {
@@ -98,7 +98,7 @@ func (l LevelRepository) GetFirstInGroup(group string) (id string, err error) {
 	return id, err
 }
 
-func (l LevelRepository) OwnerReg(owner string, kinds []string) (err error) {
+func (l LevelAdapter) OwnerReg(owner string, kinds []string) (err error) {
 	batch := new(leveldb.Batch)
 	for _, itr := range kinds {
 		keyOwner := fmt.Sprintf("%s-%s-%s", prefixOwner, itr, owner)
@@ -112,7 +112,7 @@ func (l LevelRepository) OwnerReg(owner string, kinds []string) (err error) {
 	return err
 }
 
-func (l LevelRepository) SetOffset(kind string, startId string) (err error) {
+func (l LevelAdapter) SetOffset(kind string, startId string) (err error) {
 	keyOffset := fmt.Sprintf("%s-%s", prefixOffset, kind)
 	err = l.db.Put([]byte(keyOffset), []byte(startId), nil)
 	if err != nil {
@@ -121,7 +121,7 @@ func (l LevelRepository) SetOffset(kind string, startId string) (err error) {
 	return
 }
 
-func (l *LevelRepository) Add(group string, kind string, param map[string]string) (id string, err error) {
+func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (id string, err error) {
 	rr, ok := l.kinds[kind]
 	if !ok {
 		owners, err := l.getOwnersKind(kind)
@@ -155,7 +155,6 @@ func (l *LevelRepository) Add(group string, kind string, param map[string]string
 	batch.Put([]byte(id), []byte(taskBytes))
 	batch.Put([]byte(keyGroup), []byte(id))
 	err = l.db.Write(batch, nil)
-
 	if err != nil {
 		return id, fmt.Errorf("could not set task in bucket 'task': %v", err)
 	}
@@ -163,7 +162,12 @@ func (l *LevelRepository) Add(group string, kind string, param map[string]string
 	return id, err
 }
 
-func (l *LevelRepository) Update(id string, status entity.Status, param map[string]string, error *string) (err error) {
+func (l *LevelAdapter) Update(
+	id string,
+	status entity.Status,
+	param map[string]string,
+	error *string,
+) (err error) {
 	task, err := l.Get(id)
 	if err != nil {
 		return fmt.Errorf("get tast from db error: %v", err)
@@ -230,7 +234,7 @@ func (l *LevelRepository) Update(id string, status entity.Status, param map[stri
 	return err
 }
 
-func (l LevelRepository) getGroupId(id string, group string) (groupId string, err error) {
+func (l LevelAdapter) getGroupId(id string, group string) (groupId string, err error) {
 	its := strings.Split(string(id), "-")
 	if len(its) != 4 {
 		return groupId, fmt.Errorf("could not parse groupId, format error: %v", id)
@@ -242,7 +246,7 @@ func (l LevelRepository) getGroupId(id string, group string) (groupId string, er
 	return groupId, err
 }
 
-func (l LevelRepository) getOwnersKind(kind string) (owners []string, err error) {
+func (l LevelAdapter) getOwnersKind(kind string) (owners []string, err error) {
 	prefix := prefixOwner + "-" + kind + "-"
 	owners = []string{}
 	iter := l.db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)
@@ -257,7 +261,7 @@ func (l LevelRepository) getOwnersKind(kind string) (owners []string, err error)
 	return owners, err
 }
 
-func (l *LevelRepository) nextNum(ts uint64) {
+func (l *LevelAdapter) nextNum(ts uint64) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if ts == l.ts {

@@ -22,6 +22,8 @@ const (
 	requestIDKey key = 0
 )
 
+type handlerFunc func(w http.ResponseWriter, r *http.Request) error
+
 type HttpServer struct {
 	port    string
 	app     app.Application
@@ -33,19 +35,19 @@ type ErrorResult struct {
 	Error string `json:"error"`
 }
 
-type IdResult struct {
-	Id string `json:"id"`
+func handle(f handlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			if err := encode(w, int(http.StatusInternalServerError), NewErrorResult(err)); err != nil {
+				log.Printf("failed to encode error: %s\n", err)
+			}
+		}
+	}
 }
 
 func NewErrorResult(err error) ErrorResult {
 	return ErrorResult{
 		Error: err.Error(),
-	}
-}
-
-func NewIdResult(id string) IdResult {
-	return IdResult{
-		Id: id,
 	}
 }
 
@@ -59,7 +61,8 @@ func NewHttpServer(port string, application app.Application, logger *log.Logger)
 
 func (h *HttpServer) Start() {
 	http.HandleFunc("GET /healthz", h.HeathCheck())
-	http.HandleFunc("POST /task", h.Add())
+	http.HandleFunc("POST /task/add", handle(h.Add()))
+	http.HandleFunc("POST /task/update", handle(h.Update()))
 
 	nextRequestID := func() string {
 		return strconv.FormatInt(time.Now().UnixNano(), 10)
@@ -157,7 +160,7 @@ func encode[T any](w http.ResponseWriter, status int, v T) error {
 func decode[T any](r *http.Request) (T, error) {
 	var v T
 	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		return v, fmt.Errorf("decode json: %w", err)
+		return v, fmt.Errorf("decode request: %w", err)
 	}
 	return v, nil
 }

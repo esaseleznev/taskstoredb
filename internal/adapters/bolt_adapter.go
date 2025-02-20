@@ -12,20 +12,20 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-type BoltRepository struct {
+type BoltAdapter struct {
 	db    *bolt.DB
 	kinds map[string]*roundRobin
 }
 
-func NewBoltRepository(db *bolt.DB) *BoltRepository {
+func NewBoltAdapter(db *bolt.DB) *BoltAdapter {
 	if db == nil {
 		panic("missing db")
 	}
 
-	return &BoltRepository{db: db, kinds: make(map[string]*roundRobin)}
+	return &BoltAdapter{db: db, kinds: make(map[string]*roundRobin)}
 }
 
-func (b BoltRepository) GetFirstInGroup(group string) (id string, err error) {
+func (b BoltAdapter) GetFirstInGroup(group string) (id string, err error) {
 	err = b.db.View(func(tx *bolt.Tx) error {
 		c := tx.Bucket([]byte(prefixGroup)).Cursor()
 		prefix := []byte(group + "-")
@@ -42,7 +42,7 @@ func (b BoltRepository) GetFirstInGroup(group string) (id string, err error) {
 	return id, err
 }
 
-func (b BoltRepository) OwnerReg(owner string, kinds []string) (err error) {
+func (b BoltAdapter) OwnerReg(owner string, kinds []string) (err error) {
 	offset := Offset{
 		Value: 0,
 		Ts:    time.Now(),
@@ -72,7 +72,7 @@ func (b BoltRepository) OwnerReg(owner string, kinds []string) (err error) {
 	return err
 }
 
-func (b BoltRepository) Add(group string, kind string, param map[string]string) (id string, err error) {
+func (b BoltAdapter) Add(group string, kind string, param map[string]string) (id string, err error) {
 	rr, ok := b.kinds[kind]
 	if !ok {
 		owners, err := b.getOwnersKind(kind)
@@ -132,7 +132,7 @@ func (b BoltRepository) Add(group string, kind string, param map[string]string) 
 	return id, err
 }
 
-func (b BoltRepository) getOwnersKind(kind string) (owners []string, err error) {
+func (b BoltAdapter) getOwnersKind(kind string) (owners []string, err error) {
 	prefix := []byte(kind + "-")
 	owners = []string{}
 	err = b.db.View(func(tx *bolt.Tx) error {

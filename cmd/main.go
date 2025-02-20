@@ -20,7 +20,6 @@ import (
 // }
 
 func main() {
-
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	config := config.NewConfig()
 	application := newApplication(config, logger)
@@ -33,16 +32,16 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 	if err != nil {
 		logger.Fatalf("Could not open leveldb %+v\n", err)
 	}
-	r := adapters.NewLevelRepository(db)
+	repo := adapters.NewLevelAdapter(db)
+	adapter := adapters.HttpClusterAdapter{}
 
 	servers := config.Cluster.Servers
-	_ = hashring.New(servers)
+	ring := hashring.New(servers)
 
 	return app.Application{
 		Commands: app.Commands{
-			AddTask:    command.NewAddTaskHandler(r),
-			UpdateTask: command.NewUpdateTaskHendler(r),
+			AddTask:    command.NewAddTaskHandler(repo, adapter, ring, config.Cluster.Current),
+			UpdateTask: command.NewUpdateTaskHendler(repo, adapter, ring, config.Cluster.Current),
 		},
 	}
-
 }
