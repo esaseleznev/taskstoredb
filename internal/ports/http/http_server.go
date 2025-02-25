@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/esaseleznev/taskstoredb/internal/app"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
 
 type key int
@@ -31,10 +32,6 @@ type HttpServer struct {
 	healthy int32
 }
 
-type ErrorResult struct {
-	Error string `json:"error"`
-}
-
 func handle(f handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(w, r); err != nil {
@@ -45,8 +42,8 @@ func handle(f handlerFunc) http.HandlerFunc {
 	}
 }
 
-func NewErrorResult(err error) ErrorResult {
-	return ErrorResult{
+func NewErrorResult(err error) contract.ErrorResponse {
+	return contract.ErrorResponse{
 		Error: err.Error(),
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	entity "github.com/esaseleznev/taskstoredb/internal/domain"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	leveldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -29,7 +29,7 @@ func NewLevelAdapter(db *leveldb.DB) *LevelAdapter {
 	return &LevelAdapter{db: db, mu: &sync.Mutex{}, kinds: make(map[string]*roundRobin)}
 }
 
-func (l LevelAdapter) Get(id string) (tasks *entity.Task, err error) {
+func (l LevelAdapter) Get(id string) (tasks *contract.Task, err error) {
 	v, err := l.db.Get([]byte(id), nil)
 	if err == errors.ErrNotFound {
 		return
@@ -38,7 +38,7 @@ func (l LevelAdapter) Get(id string) (tasks *entity.Task, err error) {
 		return nil, fmt.Errorf("get tast from db error: %v", err)
 	}
 
-	task := entity.Task{}
+	task := contract.Task{}
 	err = json.Unmarshal(v, &task)
 	if err != nil {
 		return nil, fmt.Errorf("task unmarshal error: %v", err)
@@ -47,8 +47,8 @@ func (l LevelAdapter) Get(id string) (tasks *entity.Task, err error) {
 	return &task, err
 }
 
-func (l LevelAdapter) Pool(owner string, kind string, size uint) (tasks []entity.Task, err error) {
-	tasks = make([]entity.Task, 0)
+func (l LevelAdapter) Pool(owner string, kind string, size uint) (tasks []contract.Task, err error) {
+	tasks = make([]contract.Task, 0)
 	prefix := prefixTask + "-" + kind + "-"
 	r := util.BytesPrefix([]byte(prefix))
 
@@ -65,7 +65,7 @@ func (l LevelAdapter) Pool(owner string, kind string, size uint) (tasks []entity
 
 out:
 	for iter.Next() {
-		task := entity.Task{}
+		task := contract.Task{}
 		err := json.Unmarshal(iter.Value(), &task)
 		if err != nil {
 			return tasks, fmt.Errorf("task unmarshal error: %v", err)
@@ -133,11 +133,11 @@ func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (
 	}
 
 	owner := rr.get()
-	task := entity.Task{
+	task := contract.Task{
 		Kind:   kind,
 		Group:  group,
 		Param:  param,
-		Status: entity.VIRGIN,
+		Status: contract.VIRGIN,
 		Owner:  owner,
 		Ts:     time.Now(),
 	}
@@ -164,7 +164,7 @@ func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (
 
 func (l *LevelAdapter) Update(
 	id string,
-	status entity.Status,
+	status contract.Status,
 	param map[string]string,
 	error *string,
 ) (err error) {
@@ -182,15 +182,15 @@ func (l *LevelAdapter) Update(
 	batch := new(leveldb.Batch)
 
 	switch status {
-	case entity.SCHEDULED:
-	case entity.VIRGIN:
+	case contract.SCHEDULED:
+	case contract.VIRGIN:
 		taskBytes, err := json.Marshal(task)
 		if err != nil {
 			return fmt.Errorf("task marshal error: %v", err)
 		}
 		batch.Put([]byte(id), taskBytes)
-	case entity.FAILED:
-		taskError := entity.Task{
+	case contract.FAILED:
+		taskError := contract.Task{
 			Id: strings.Replace(
 				id,
 				prefixTask,
@@ -215,7 +215,7 @@ func (l *LevelAdapter) Update(
 		batch.Delete([]byte(groupId))
 		batch.Delete([]byte(id))
 		batch.Put([]byte(taskError.Id), taskBytes)
-	case entity.COMPLETED:
+	case contract.COMPLETED:
 		groupId, err := l.getGroupId(id, task.Group)
 		if err != nil {
 			return fmt.Errorf("taskError group parse error: %v", err)

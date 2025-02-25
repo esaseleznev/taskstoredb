@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	entity "github.com/esaseleznev/taskstoredb/internal/domain"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	leveldb "github.com/syndtr/goleveldb/leveldb"
 )
 
@@ -110,7 +110,7 @@ func TestLevelAdapter_UpdateFailed(t *testing.T) {
 		t.Fatal(err)
 	}
 	errorTxt := "error test"
-	err = adapter.Update(id, entity.FAILED, map[string]string{"pid": groupIn, "status": "dead"}, &errorTxt)
+	err = adapter.Update(id, contract.FAILED, map[string]string{"pid": groupIn, "status": "dead"}, &errorTxt)
 	if err != nil {
 		t.Fatal(err)
 	}

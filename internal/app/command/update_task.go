@@ -3,23 +3,14 @@ package command
 import (
 	"fmt"
 
-	entity "github.com/esaseleznev/taskstoredb/internal/domain"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/serialx/hashring"
 )
-
-type UpdateTask struct {
-	Group  string
-	Id     string
-	Kind   string
-	Status entity.Status
-	Param  map[string]string
-	Error  *string
-}
 
 type UpdateTaskDbAdapter interface {
 	Update(
 		id string,
-		status entity.Status,
+		status contract.Status,
 		param map[string]string,
 		error *string,
 	) (err error)
@@ -30,7 +21,7 @@ type UpdateTaskClusterAdapter interface {
 		url string,
 		group string,
 		id string,
-		status entity.Status,
+		status contract.Status,
 		param map[string]string,
 		error *string,
 	) (err error)
@@ -50,7 +41,7 @@ func NewUpdateTaskHendler(
 	url string,
 ) UpdateTaskHendler {
 	if db == nil {
-		panic("nil updateTaskDbAdapter")
+		panic("nil updateTaskAdapter")
 	}
 	if cluster == nil {
 		panic("nil updateTaskClusterAdapter")
@@ -65,7 +56,7 @@ func NewUpdateTaskHendler(
 func (h UpdateTaskHendler) Handle(
 	group string,
 	id string,
-	status entity.Status,
+	status contract.Status,
 	param map[string]string,
 	error *string,
 ) (err error) {

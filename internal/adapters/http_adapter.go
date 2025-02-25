@@ -3,13 +3,37 @@ package adapters
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
-	entity "github.com/esaseleznev/taskstoredb/internal/domain"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
 
 type HttpClusterAdapter struct{}
+
+func (a HttpClusterAdapter) isError(resp *http.Response) error {
+	if resp.StatusCode == 200 {
+		return nil
+	}
+
+	ct := resp.Header.Get("Content-Type")
+	if ct != "" {
+		mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
+		if mediaType == "application/json" {
+			defer resp.Body.Close()
+			var r contract.ErrorResponse
+			err := json.NewDecoder(resp.Body).Decode(&r)
+			if err != nil {
+				return fmt.Errorf("response format error: %v", err)
+			}
+			return errors.New(r.Error)
+		}
+	}
+
+	return fmt.Errorf("httpcode %v", resp.StatusCode)
+}
 
 func (a HttpClusterAdapter) Add(
 	url string,
@@ -17,16 +41,7 @@ func (a HttpClusterAdapter) Add(
 	kind string,
 	param map[string]string,
 ) (id string, err error) {
-	type request struct {
-		Group string            `json:"g"`
-		Kind  string            `json:"k"`
-		Param map[string]string `json:"p"`
-	}
-	type response struct {
-		Id string `json:"id"`
-	}
-
-	r := request{
+	r := contract.AddRequest{
 		Group: group,
 		Kind:  kind,
 		Param: param,
@@ -41,10 +56,14 @@ func (a HttpClusterAdapter) Add(
 	if err != nil {
 		return id, fmt.Errorf("request url %v error: %v", url, err)
 	}
-
 	defer resp.Body.Close()
 
-	var res response
+	err = a.isError(resp)
+	if err != nil {
+		return id, fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	var res contract.AddResponse
 	json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
 		return id, fmt.Errorf("response format error: %v", err)
@@ -59,19 +78,11 @@ func (a HttpClusterAdapter) Update(
 	url string,
 	group string,
 	id string,
-	status entity.Status,
+	status contract.Status,
 	param map[string]string,
 	error *string,
 ) (err error) {
-	type request struct {
-		Id     string            `json:"id"`
-		Group  string            `json:"g"`
-		Status int               `json:"s"`
-		Param  map[string]string `json:"p"`
-		Error  *string           `json:"e"`
-	}
-
-	r := request{
+	r := contract.UpdateRequest{
 		Id:     id,
 		Group:  group,
 		Param:  param,
@@ -88,8 +99,12 @@ func (a HttpClusterAdapter) Update(
 	if err != nil {
 		return fmt.Errorf("request url %v error: %v", url, err)
 	}
-
 	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
 
 	return err
 }

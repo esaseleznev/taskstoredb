@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	entity "github.com/esaseleznev/taskstoredb/internal/domain"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -84,11 +84,11 @@ func (b BoltAdapter) Add(group string, kind string, param map[string]string) (id
 	}
 
 	owner := rr.get()
-	task := entity.Task{
+	task := contract.Task{
 		Kind:   kind,
 		Group:  group,
 		Param:  param,
-		Status: entity.VIRGIN,
+		Status: contract.VIRGIN,
 		Owner:  owner,
 		Ts:     time.Now(),
 	}
