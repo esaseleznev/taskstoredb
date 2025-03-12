@@ -3,14 +3,14 @@ package contract
 import "time"
 
 type Task struct {
-	Id     string            `json:"-"`
+	Id     string            `json:"id,omitzero"`
 	Kind   string            `json:"k"`
 	Group  string            `json:"g"`
-	Owner  *string           `json:"o"`
+	Owner  *string           `json:"o,omitzero"`
 	Status Status            `json:"s"`
 	Param  map[string]string `json:"p"`
 	Ts     time.Time         `json:"t"`
-	Error  *string           `json:"e"`
+	Error  *string           `json:"e,omitzero"`
 }
 
 type Status int

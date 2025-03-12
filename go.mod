@@ -1,6 +1,6 @@
 module github.com/esaseleznev/taskstoredb
 
-go 1.23.2
+go 1.24.0
 
 require (
 	github.com/serialx/hashring v0.0.0-20200727003509-22c0c7ab6b1b

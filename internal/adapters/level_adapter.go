@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
@@ -15,9 +14,7 @@ import (
 
 type LevelAdapter struct {
 	db    *leveldb.DB
-	mu    *sync.Mutex
-	ts    uint64
-	num   uint
+	tsid  *tsid
 	kinds map[string]*roundRobin
 }
 
@@ -26,7 +23,7 @@ func NewLevelAdapter(db *leveldb.DB) *LevelAdapter {
 		panic("missing db")
 	}
 
-	return &LevelAdapter{db: db, mu: &sync.Mutex{}, kinds: make(map[string]*roundRobin)}
+	return &LevelAdapter{db: db, kinds: make(map[string]*roundRobin), tsid: newTsid()}
 }
 
 func (l LevelAdapter) Get(id string) (tasks *contract.Task, err error) {
@@ -52,7 +49,7 @@ func (l LevelAdapter) Pool(owner string, kind string, size uint) (tasks []contra
 	prefix := prefixTask + "-" + kind + "-"
 	r := util.BytesPrefix([]byte(prefix))
 
-	keyOffset := fmt.Sprintf("%s-%s", prefixOffset, kind)
+	keyOffset := fmt.Sprintf("%s-%s-%s", prefixOffset, owner, kind)
 	startId, err := l.db.Get([]byte(keyOffset), nil)
 	if err != nil && err != errors.ErrNotFound {
 		return tasks, fmt.Errorf("task get offset error: %v", err)
@@ -112,8 +109,8 @@ func (l LevelAdapter) OwnerReg(owner string, kinds []string) (err error) {
 	return err
 }
 
-func (l LevelAdapter) SetOffset(kind string, startId string) (err error) {
-	keyOffset := fmt.Sprintf("%s-%s", prefixOffset, kind)
+func (l LevelAdapter) SetOffset(owner string, kind string, startId string) (err error) {
+	keyOffset := fmt.Sprintf("%s-%s-%s", prefixOffset, owner, kind)
 	err = l.db.Put([]byte(keyOffset), []byte(startId), nil)
 	if err != nil {
 		return fmt.Errorf("could not set offset: %v", err)
@@ -147,10 +144,14 @@ func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (
 		return id, fmt.Errorf("taskNew marshal error: %v", err)
 	}
 
-	ts := uint64(task.Ts.UnixMilli())
-	l.nextNum(ts)
-	id = fmt.Sprintf("%s-%s-%d-%03d", prefixTask, kind, ts, l.num)
-	keyGroup := fmt.Sprintf("%s-%s-%d-%03d", prefixGroup, group, ts, l.num)
+	ts := l.tsid.next(task.Ts.UnixMilli())
+	// l.nextNum(ts)
+
+	id = fmt.Sprintf("%s-%s-%s", prefixTask, kind, ts)
+	keyGroup := fmt.Sprintf("%s-%s-%s", prefixGroup, group, ts)
+	fmt.Println(ts)
+	// id = fmt.Sprintf("%s-%s-%d-%04d", prefixTask, kind, ts, l.num)
+	// keyGroup := fmt.Sprintf("%s-%s-%d-%04d", prefixGroup, group, ts, l.num)
 	batch := new(leveldb.Batch)
 	batch.Put([]byte(id), []byte(taskBytes))
 	batch.Put([]byte(keyGroup), []byte(id))
@@ -162,7 +163,7 @@ func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (
 	return id, err
 }
 
-func (l *LevelAdapter) Update(
+func (l LevelAdapter) Update(
 	id string,
 	status contract.Status,
 	param map[string]string,
@@ -236,12 +237,12 @@ func (l *LevelAdapter) Update(
 
 func (l LevelAdapter) getGroupId(id string, group string) (groupId string, err error) {
 	its := strings.Split(string(id), "-")
-	if len(its) != 4 {
+	if len(its) != 3 {
 		return groupId, fmt.Errorf("could not parse groupId, format error: %v", id)
 	}
 	its[0] = prefixGroup
 	its[1] = group
-	groupId = fmt.Sprintf("%s-%s-%s-%s", its[0], its[1], its[2], its[3])
+	groupId = fmt.Sprintf("%s-%s-%s", its[0], its[1], its[2])
 
 	return groupId, err
 }
@@ -259,15 +260,4 @@ func (l LevelAdapter) getOwnersKind(kind string) (owners []string, err error) {
 	iter.Release()
 	err = iter.Error()
 	return owners, err
-}
-
-func (l *LevelAdapter) nextNum(ts uint64) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	if ts == l.ts {
-		l.num += 1
-	} else {
-		l.num = 0
-		l.ts = ts
-	}
 }

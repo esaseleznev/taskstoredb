@@ -42,6 +42,9 @@ func NewAddTaskHandler(
 	if cluster == nil {
 		panic("nil AddTaskClusterAdapter")
 	}
+	if ring == nil {
+		panic("nil ring")
+	}
 	if url == "" {
 		panic("url is empty")
 	}

@@ -46,6 +46,9 @@ func NewUpdateTaskHendler(
 	if cluster == nil {
 		panic("nil updateTaskClusterAdapter")
 	}
+	if ring == nil {
+		panic("nil ring")
+	}
 	if url == "" {
 		panic("url is empty")
 	}

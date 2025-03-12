@@ -21,3 +21,20 @@ type UpdateRequest struct {
 	Param  map[string]string `json:"p"`
 	Error  *string           `json:"e"`
 }
+
+type OwnerRegRequest struct {
+	Owner    string   `json:"o"`
+	Kinds    []string `json:"k"`
+	Internal bool     `json:"i"`
+}
+
+type SetOffsetRequest struct {
+	Owner    string `json:"o"`
+	Kind     string `json:"k"`
+	StartId  string `json:"id"`
+	Internal bool   `json:"i"`
+}
+
+type GetFirstInGroupResponse struct {
+	Id string `json:"id"`
+}

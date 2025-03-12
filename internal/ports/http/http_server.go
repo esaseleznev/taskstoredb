@@ -1,8 +1,9 @@
-package ports
+package http
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -23,7 +24,7 @@ const (
 	requestIDKey key = 0
 )
 
-type handlerFunc func(w http.ResponseWriter, r *http.Request) error
+type handlerFunc func(a app.Application, w http.ResponseWriter, r *http.Request) error
 
 type HttpServer struct {
 	port    string
@@ -32,10 +33,25 @@ type HttpServer struct {
 	healthy int32
 }
 
-func handle(f handlerFunc) http.HandlerFunc {
+type HttpError struct {
+	Msg    string
+	Status int
+}
+
+func (e HttpError) Error() string {
+	return e.Msg
+}
+
+func (h HttpServer) handle(f handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			if err := encode(w, int(http.StatusInternalServerError), NewErrorResult(err)); err != nil {
+		if err := f(h.app, w, r); err != nil {
+			status := http.StatusInternalServerError
+			var httpError *HttpError
+			if errors.As(err, &httpError) {
+				status = httpError.Status
+			}
+
+			if err := encode(w, int(status), NewErrorResult(err)); err != nil {
 				log.Printf("failed to encode error: %s\n", err)
 			}
 		}
@@ -58,8 +74,11 @@ func NewHttpServer(port string, application app.Application, logger *log.Logger)
 
 func (h *HttpServer) Start() {
 	http.HandleFunc("GET /healthz", h.HeathCheck())
-	http.HandleFunc("POST /task/add", handle(h.Add()))
-	http.HandleFunc("POST /task/update", handle(h.Update()))
+	http.HandleFunc("POST /task", h.handle(Add))
+	http.HandleFunc("PATCH /task", h.handle(Update))
+	http.HandleFunc("PUT /owner", h.handle(OwnerReg))
+	http.HandleFunc("PUT /offset", h.handle(SetOffset))
+	http.HandleFunc("GET /task/group/{group}", h.handle(GetFirstInGroup))
 
 	nextRequestID := func() string {
 		return strconv.FormatInt(time.Now().UnixNano(), 10)
@@ -106,7 +125,7 @@ func (h *HttpServer) setHealthy(val int32) {
 	atomic.StoreInt32(&h.healthy, val)
 }
 
-func (h HttpServer) HeathCheck() http.HandlerFunc {
+func (h *HttpServer) HeathCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if atomic.LoadInt32(&h.healthy) == 1 {
 			w.WriteHeader(http.StatusNoContent)

@@ -52,7 +52,7 @@ func (a HttpClusterAdapter) Add(
 		return id, fmt.Errorf("request format error: %v", err)
 	}
 
-	resp, err := http.Post(url+"/task/add", "application/json", bytes.NewBuffer(json_data))
+	resp, err := http.Post(url+"/task", "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
 		return id, fmt.Errorf("request url %v error: %v", url, err)
 	}
@@ -95,7 +95,14 @@ func (a HttpClusterAdapter) Update(
 		return fmt.Errorf("request format error: %v", err)
 	}
 
-	resp, err := http.Post(url+"/task/update", "application/json", bytes.NewBuffer(json_data))
+	req, err := http.NewRequest(http.MethodPatch, url+"/task", bytes.NewBuffer(json_data))
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return fmt.Errorf("create request error: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request url %v error: %v", url, err)
 	}
@@ -107,4 +114,97 @@ func (a HttpClusterAdapter) Update(
 	}
 
 	return err
+}
+
+func (a HttpClusterAdapter) OwnerReg(url string, owner string, kinds []string) (err error) {
+	r := contract.OwnerRegRequest{
+		Owner:    owner,
+		Kinds:    kinds,
+		Internal: true,
+	}
+
+	json_data, err := json.Marshal(r)
+	if err != nil {
+		return fmt.Errorf("request format error: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPut, url+"/owner", bytes.NewBuffer(json_data))
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return fmt.Errorf("create request error: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	return err
+}
+
+func (a HttpClusterAdapter) SetOffset(url string, owner string, kind string, startId string) (err error) {
+	r := contract.SetOffsetRequest{
+		Owner:    owner,
+		Kind:     kind,
+		StartId:  startId,
+		Internal: true,
+	}
+
+	json_data, err := json.Marshal(r)
+	if err != nil {
+		return fmt.Errorf("request format error: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPut, url+"/offset", bytes.NewBuffer(json_data))
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return fmt.Errorf("create request error: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	return err
+}
+
+func (a HttpClusterAdapter) GetFirstInGroup(
+	url string,
+	group string,
+) (id string, err error) {
+	resp, err := http.Get(url + "/task/group/" + group)
+	if err != nil {
+		return id, fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return id, fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	var res contract.GetFirstInGroupResponse
+	json.NewDecoder(resp.Body).Decode(&res)
+	if err != nil {
+		return id, fmt.Errorf("response format error: %v", err)
+	}
+
+	id = res.Id
+
+	return id, err
 }

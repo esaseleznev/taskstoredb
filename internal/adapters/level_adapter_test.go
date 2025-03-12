@@ -54,25 +54,25 @@ func TestLevelAdapter_Pool(t *testing.T) {
 	}
 
 	for i := 1; i < 5; i++ {
-		_, err = adapter.Add(groupIn, "TEST1", map[string]string{"pid": groupIn, "status": "dead"})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	for i := 1; i < 7; i++ {
 		_, err = adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	err = adapter.SetOffset("TEST", id)
+	for i := 1; i < 100; i++ {
+		_, err = adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	err = adapter.SetOffset("100", "TEST", id)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tasks, err := adapter.Pool("100", "TEST", 5)
+	tasks, err := adapter.Pool("100", "TEST", 100)
 	if err != nil {
 		t.Fatal(err)
 	}
