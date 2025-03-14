@@ -1,7 +1,7 @@
 package http
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/esaseleznev/taskstoredb/internal/app"
@@ -10,6 +10,11 @@ import (
 
 func newBadRequestError(err error) HttpError {
 	return HttpError{Msg: err.Error(), Status: http.StatusBadRequest}
+}
+
+func emptyBody(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusOK)
+	return nil
 }
 
 func Add(a app.Application, w http.ResponseWriter, r *http.Request) error {
@@ -33,8 +38,8 @@ func Update(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	}
 
 	err = a.Commands.UpdateTask.Handle(
-		t.Id,
 		t.Group,
+		t.Id,
 		contract.Status(t.Status),
 		t.Param,
 		t.Error,
@@ -43,8 +48,7 @@ func Update(a app.Application, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	return nil
+	return emptyBody(w)
 }
 
 func OwnerReg(a app.Application, w http.ResponseWriter, r *http.Request) error {
@@ -58,8 +62,7 @@ func OwnerReg(a app.Application, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	return nil
+	return emptyBody(w)
 }
 
 func SetOffset(a app.Application, w http.ResponseWriter, r *http.Request) error {
@@ -73,14 +76,13 @@ func SetOffset(a app.Application, w http.ResponseWriter, r *http.Request) error 
 		return err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	return nil
+	return emptyBody(w)
 }
 
 func GetFirstInGroup(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	group := r.PathValue("group")
 	if group == "" {
-		return newBadRequestError(fmt.Errorf("not found query param 'group'"))
+		return newBadRequestError(errors.New("not found query param 'group'"))
 	}
 
 	id, err := a.Queries.GetFirstInGroup.Handle(group)

@@ -46,7 +46,7 @@ func (h HttpServer) handle(f handlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := f(h.app, w, r); err != nil {
 			status := http.StatusInternalServerError
-			var httpError *HttpError
+			var httpError HttpError
 			if errors.As(err, &httpError) {
 				status = httpError.Status
 			}
