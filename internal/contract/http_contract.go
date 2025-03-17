@@ -38,3 +38,9 @@ type SetOffsetRequest struct {
 type GetFirstInGroupResponse struct {
 	Id string `json:"id"`
 }
+
+type PoolRequest struct {
+	Owner    string `json:"o"`
+	Kind     string `json:"k"`
+	Internal bool   `json:"i"`
+}

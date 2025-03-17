@@ -19,4 +19,5 @@ type Commands struct {
 
 type Queries struct {
 	GetFirstInGroup query.GetFirstInGroupHandler
+	Pool            query.PoolHandler
 }

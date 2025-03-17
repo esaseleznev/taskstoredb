@@ -1,6 +1,8 @@
 package command
 
 import (
+	"errors"
+
 	"github.com/serialx/hashring"
 )
 
@@ -47,6 +49,16 @@ func NewSetOffsetHandler(
 }
 
 func (h SetOffsetHandler) Handle(owner string, kind string, startId string, internal bool) (err error) {
+	if owner == "" {
+		return errors.New("owner is empty")
+	}
+	if kind == "" {
+		return errors.New("kind is empty")
+	}
+	if startId == "" {
+		return errors.New("startId is empty")
+	}
+
 	if internal {
 		return h.db.SetOffset(owner, kind, startId)
 	}

@@ -92,3 +92,17 @@ func GetFirstInGroup(a app.Application, w http.ResponseWriter, r *http.Request) 
 
 	return encode(w, int(http.StatusOK), contract.GetFirstInGroupResponse{Id: id})
 }
+
+func Pool(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.PoolRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	tasks, err := a.Queries.Pool.Handle(o.Owner, o.Kind, o.Internal)
+	if err != nil {
+		return err
+	}
+
+	return encode(w, int(http.StatusOK), tasks)
+}

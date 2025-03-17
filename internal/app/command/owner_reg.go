@@ -1,6 +1,8 @@
 package command
 
 import (
+	"errors"
+
 	"github.com/serialx/hashring"
 )
 
@@ -47,6 +49,13 @@ func NewOwnerRegHandler(
 }
 
 func (h OwnerRegHandler) Handle(owner string, kinds []string, internal bool) (err error) {
+	if owner == "" {
+		return errors.New("owner is empty")
+	}
+	if len(kinds) == 0 {
+		return errors.New("kinds is empty")
+	}
+
 	if internal {
 		return h.db.OwnerReg(owner, kinds)
 	}

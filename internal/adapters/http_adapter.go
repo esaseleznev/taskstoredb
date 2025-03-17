@@ -208,3 +208,45 @@ func (a HttpClusterAdapter) GetFirstInGroup(
 
 	return id, err
 }
+
+func (a HttpClusterAdapter) Pool(
+	url string,
+	owner string,
+	kind string,
+) (tasks []contract.Task, err error) {
+	r := contract.PoolRequest{
+		Owner:    owner,
+		Kind:     kind,
+		Internal: true,
+	}
+
+	json_data, err := json.Marshal(r)
+	if err != nil {
+		return nil, fmt.Errorf("request format error: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url+"/pool", bytes.NewBuffer(json_data))
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return nil, fmt.Errorf("create request error: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return nil, fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	json.NewDecoder(resp.Body).Decode(&tasks)
+	if err != nil {
+		return nil, fmt.Errorf("response format error: %v", err)
+	}
+
+	return tasks, err
+}

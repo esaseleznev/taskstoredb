@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/serialx/hashring"
@@ -57,6 +58,13 @@ func (h AddTaskHandler) Handle(
 	kind string,
 	param map[string]string,
 ) (id string, err error) {
+	if group == "" {
+		return id, errors.New("group is empty")
+	}
+	if kind == "" {
+		return id, errors.New("kind is empty")
+	}
+
 	node, exists := h.ring.GetNode(group)
 	if !exists {
 		return id, fmt.Errorf("not found node by group: %v", node)

@@ -1,6 +1,7 @@
 package query
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/serialx/hashring"
@@ -44,6 +45,10 @@ func NewGetFirstInGroupHandler(
 }
 
 func (h GetFirstInGroupHandler) Handle(group string) (id string, err error) {
+	if group == "" {
+		return id, errors.New("group is empty")
+	}
+
 	node, exists := h.ring.GetNode(group)
 	if !exists {
 		return id, fmt.Errorf("not found node by group: %v", node)

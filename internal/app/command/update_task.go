@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
@@ -63,6 +64,16 @@ func (h UpdateTaskHendler) Handle(
 	param map[string]string,
 	error *string,
 ) (err error) {
+	if group == "" {
+		return errors.New("group is empty")
+	}
+	if id == "" {
+		return errors.New("id is empty")
+	}
+	if status == 0 {
+		return errors.New("status is empty")
+	}
+
 	node, exists := h.ring.GetNode(group)
 	if !exists {
 		return fmt.Errorf("not found node by group: %v", node)
