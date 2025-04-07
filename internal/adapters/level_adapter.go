@@ -41,6 +41,8 @@ func (l LevelAdapter) Get(id string) (tasks *contract.Task, err error) {
 		return nil, fmt.Errorf("task unmarshal error: %v", err)
 	}
 
+	task.Id = id
+
 	return &task, err
 }
 

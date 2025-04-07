@@ -78,8 +78,9 @@ func (h *HttpServer) Start() {
 	http.HandleFunc("PATCH /task", h.handle(Update))
 	http.HandleFunc("PUT /owner", h.handle(OwnerReg))
 	http.HandleFunc("PUT /offset", h.handle(SetOffset))
+	http.HandleFunc("GET /task/{id}/group/{group}", h.handle(Get))
 	http.HandleFunc("GET /task/group/{group}", h.handle(GetFirstInGroup))
-	http.HandleFunc("POST /pool", h.handle(Pool))
+	http.HandleFunc("GET /pool/{owner}/kind/{kind}", h.handle(Pool))
 
 	nextRequestID := func() string {
 		return strconv.FormatInt(time.Now().UnixNano(), 10)

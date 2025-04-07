@@ -214,25 +214,7 @@ func (a HttpClusterAdapter) Pool(
 	owner string,
 	kind string,
 ) (tasks []contract.Task, err error) {
-	r := contract.PoolRequest{
-		Owner:    owner,
-		Kind:     kind,
-		Internal: true,
-	}
-
-	json_data, err := json.Marshal(r)
-	if err != nil {
-		return nil, fmt.Errorf("request format error: %v", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPost, url+"/pool", bytes.NewBuffer(json_data))
-	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		return nil, fmt.Errorf("create request error: %v", err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.Get(url + "/pool/" + owner + "/kind/" + kind + "?internal=true")
 	if err != nil {
 		return nil, fmt.Errorf("request url %v error: %v", url, err)
 	}
@@ -249,4 +231,28 @@ func (a HttpClusterAdapter) Pool(
 	}
 
 	return tasks, err
+}
+
+func (a HttpClusterAdapter) Get(
+	url string,
+	group string,
+	id string,
+) (task *contract.Task, err error) {
+	resp, err := http.Get(url + "/task/" + id + "/group/" + group)
+	if err != nil {
+		return task, fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return task, fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	json.NewDecoder(resp.Body).Decode(task)
+	if err != nil {
+		return nil, fmt.Errorf("response format error: %v", err)
+	}
+
+	return task, err
 }

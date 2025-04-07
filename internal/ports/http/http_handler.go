@@ -3,6 +3,7 @@ package http
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/esaseleznev/taskstoredb/internal/app"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
@@ -94,15 +95,48 @@ func GetFirstInGroup(a app.Application, w http.ResponseWriter, r *http.Request) 
 }
 
 func Pool(a app.Application, w http.ResponseWriter, r *http.Request) error {
-	o, err := decode[contract.PoolRequest](r)
-	if err != nil {
-		return newBadRequestError(err)
+	owner := r.PathValue("owner")
+	if owner == "" {
+		return newBadRequestError(errors.New("not found query param 'owner'"))
+	}
+	kind := r.PathValue("kind")
+	if kind == "" {
+		return newBadRequestError(errors.New("not found query param 'kind'"))
+	}
+	var internal bool
+	internalStr := r.URL.Query().Get("internal")
+	if internalStr == "" {
+		internal = false
+	} else {
+		var err error
+		internal, err = strconv.ParseBool(internalStr)
+		if err != nil {
+			return newBadRequestError(errors.New("bad query param 'internal'"))
+		}
 	}
 
-	tasks, err := a.Queries.Pool.Handle(o.Owner, o.Kind, o.Internal)
+	tasks, err := a.Queries.Pool.Handle(owner, kind, internal)
 	if err != nil {
 		return err
 	}
 
 	return encode(w, int(http.StatusOK), tasks)
+}
+
+func Get(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	group := r.PathValue("group")
+	if group == "" {
+		return newBadRequestError(errors.New("not found query param 'group'"))
+	}
+	id := r.PathValue("id")
+	if id == "" {
+		return newBadRequestError(errors.New("not found query param 'id'"))
+	}
+
+	task, err := a.Queries.Get.Handle(group, id)
+	if err != nil {
+		return err
+	}
+
+	return encode(w, int(http.StatusOK), task)
 }
