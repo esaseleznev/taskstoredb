@@ -59,10 +59,12 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 		Owner:  &owner,
 		Status: contract.VIRGIN,
 		Ts:     time.Now(),
+		Param:  map[string]string{"snils": "1234567890"},
+		Error:  nil,
 	}
 
 	operator := contract.And
-	condition := contract.Condition{
+	trueCondition := contract.Condition{
 		Operator: &operator,
 		Operations: []contract.Operation{
 			{
@@ -95,10 +97,20 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 				Value:    task.Ts,
 				Operator: contract.Equal,
 			},
+			{
+				Field:    "param.snils",
+				Value:    "1234567890",
+				Operator: contract.Equal,
+			},
+			{
+				Field:    "error",
+				Value:    nil,
+				Operator: contract.Equal,
+			},
 		},
 	}
 
-	res := ConditionCalculate(&task, &condition)
+	res := ConditionCalculateTask(&task, &trueCondition)
 	if res != true {
 		t.Errorf("Expected true, got %v", res)
 	}
@@ -109,7 +121,7 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 		Operations: []contract.Operation{},
 	}
 
-	res = ConditionCalculate(&task, &emptyCondition)
+	res = ConditionCalculateTask(&task, &emptyCondition)
 	if res != true {
 		t.Errorf("Expected true, got %v", res)
 	}
@@ -126,7 +138,7 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 		},
 	}
 
-	res = ConditionCalculate(&task, &falseCondition)
+	res = ConditionCalculateTask(&task, &falseCondition)
 	if res != false {
 		t.Errorf("Expected false, got %v", res)
 	}

@@ -111,6 +111,31 @@ func (l LevelAdapter) OwnerReg(owner string, kinds []string) (err error) {
 	return err
 }
 
+func (l LevelAdapter) OwnerUnreg(owner string) (err error) {
+	prefix := prefixOwner + "-"
+	var keys = []string{}
+	iter := l.db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)
+	for iter.Next() {
+		keys = append(keys, string(iter.Key()))
+	}
+	iter.Release()
+	err = iter.Error()
+	if err != nil {
+		return fmt.Errorf("could not get owner keys: %v", err)
+	}
+
+	batch := new(leveldb.Batch)
+	for _, key := range keys {
+		batch.Delete([]byte(key))
+	}
+	err = l.db.Write(batch, nil)
+	if err != nil {
+		return fmt.Errorf("could not delete owner keys: %v", err)
+	}
+
+	return err
+}
+
 func (l LevelAdapter) SetOffset(owner string, kind string, startId string) (err error) {
 	keyOffset := fmt.Sprintf("%s-%s-%s", prefixOffset, owner, kind)
 	err = l.db.Put([]byte(keyOffset), []byte(startId), nil)
@@ -147,13 +172,9 @@ func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (
 	}
 
 	ts := l.tsid.next(task.Ts.UnixMilli())
-	// l.nextNum(ts)
 
 	id = fmt.Sprintf("%s-%s-%s", prefixTask, kind, ts)
 	keyGroup := fmt.Sprintf("%s-%s-%s", prefixGroup, group, ts)
-	fmt.Println(ts)
-	// id = fmt.Sprintf("%s-%s-%d-%04d", prefixTask, kind, ts, l.num)
-	// keyGroup := fmt.Sprintf("%s-%s-%d-%04d", prefixGroup, group, ts, l.num)
 	batch := new(leveldb.Batch)
 	batch.Put([]byte(id), []byte(taskBytes))
 	batch.Put([]byte(keyGroup), []byte(id))

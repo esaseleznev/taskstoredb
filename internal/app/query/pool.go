@@ -78,5 +78,5 @@ func (h PoolHandler) Handle(owner string, kind string, internal bool) (tasks []c
 		}
 		tasks = append(tasks, portion...)
 	}
-	return nil, err
+	return tasks, err
 }

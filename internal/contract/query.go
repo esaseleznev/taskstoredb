@@ -1,10 +1,5 @@
 package contract
 
-type Select struct {
-	From  string
-	Where Condition
-}
-
 type Operator string
 
 const (

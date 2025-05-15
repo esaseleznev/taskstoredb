@@ -3,36 +3,37 @@ package adapters
 import (
 	"cmp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
 
-func ConditionCalculate(
+func ConditionCalculateTask(
 	task *contract.Task,
-	expression *contract.Condition,
+	condition *contract.Condition,
 ) bool {
-	if expression == nil || task == nil {
+	if condition == nil || task == nil {
 		return false
 	}
 	res := true
-	if len(expression.Operations) != 0 {
-		for _, operation := range expression.Operations {
-			calcRes := operationCalculate(task, &operation)
-			if expression.Operator == nil || *expression.Operator == contract.And {
+	if len(condition.Operations) != 0 {
+		for _, operation := range condition.Operations {
+			calcRes := operationCalculateTask(task, &operation)
+			if condition.Operator == nil || *condition.Operator == contract.And {
 				res = res && calcRes
-			} else if *expression.Operator == contract.Or {
+			} else if *condition.Operator == contract.Or {
 				res = res || calcRes
 			}
 		}
 	}
 
-	if len(expression.Conditions) != 0 {
-		for _, condition := range expression.Conditions {
-			calcRes := ConditionCalculate(task, &condition)
-			if expression.Operator == nil || *expression.Operator == contract.And {
+	if len(condition.Conditions) != 0 {
+		for _, condition := range condition.Conditions {
+			calcRes := ConditionCalculateTask(task, &condition)
+			if condition.Operator == nil || *condition.Operator == contract.And {
 				res = res && calcRes
-			} else if *expression.Operator == contract.Or {
+			} else if *condition.Operator == contract.Or {
 				res = res || calcRes
 			}
 		}
@@ -40,11 +41,11 @@ func ConditionCalculate(
 	return res
 }
 
-func operationCalculate(
+func operationCalculateTask(
 	task *contract.Task,
 	operation *contract.Operation,
 ) bool {
-	value := getValue(task, operation.Field)
+	value := getValueTask(task, operation.Field)
 	switch operation.Operator {
 	case contract.Equal:
 		return compare(value, operation.Value) == 0
@@ -65,7 +66,7 @@ func operationCalculate(
 	}
 }
 
-func getValue(task *contract.Task, field string) any {
+func getValueTask(task *contract.Task, field string) any {
 	switch field {
 	case "id":
 		return task.Id
@@ -74,14 +75,27 @@ func getValue(task *contract.Task, field string) any {
 	case "group":
 		return task.Group
 	case "owner":
-		return *task.Owner
+		if task.Owner != nil {
+			return *task.Owner
+		} else {
+			return nil
+		}
 	case "status":
 		return int(task.Status)
 	case "ts":
 		return task.Ts
 	case "error":
-		return *task.Error
+		if task.Error != nil {
+			return *task.Error
+		} else {
+			return nil
+		}
+
 	default:
+		s := strings.Split(field, ".")
+		if len(s) > 1 && s[0] == "param" {
+			return task.Param[s[1]]
+		}
 		return ""
 	}
 }
@@ -91,6 +105,12 @@ func getValue(task *contract.Task, field string) any {
 // first parameter a this value from Task
 // second parameter b this value from Condition
 func compare(a, b any) int {
+	if a == nil {
+		if b == nil {
+			return 0
+		}
+		return -1
+	}
 	switch a.(type) {
 	case int:
 		switch b.(type) {
