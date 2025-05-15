@@ -2,6 +2,7 @@ package query
 
 import (
 	"errors"
+	"sort"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/serialx/hashring"
@@ -78,5 +79,10 @@ func (h PoolHandler) Handle(owner string, kind string, internal bool) (tasks []c
 		}
 		tasks = append(tasks, portion...)
 	}
+
+	sort.SliceStable(tasks, func(i int, j int) bool {
+		return tasks[i].Id < tasks[j].Id
+	})
+
 	return tasks, err
 }
