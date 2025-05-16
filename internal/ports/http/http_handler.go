@@ -140,3 +140,16 @@ func Get(a app.Application, w http.ResponseWriter, r *http.Request) error {
 
 	return encode(w, int(http.StatusOK), task)
 }
+
+func SearchTask(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.SearchTaskRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	tasks, err := a.Queries.SearchTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	if err != nil {
+		return err
+	}
+	return encode(w, int(http.StatusOK), tasks)
+}

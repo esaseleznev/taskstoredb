@@ -44,6 +44,7 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 			GetFirstInGroup: query.NewGetFirstInGroupHandler(db, cluster, ring, config.Cluster.Current),
 			Pool:            query.NewPoolHandler(db, cluster, ring, config.Cluster.Current, servers),
 			Get:             query.NewGetHandler(db, cluster, ring, config.Cluster.Current),
+			SearchTask:      query.NewQyeryTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
 		},
 	}
 }

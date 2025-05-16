@@ -38,3 +38,10 @@ type SetOffsetRequest struct {
 type GetFirstInGroupResponse struct {
 	Id string `json:"id"`
 }
+
+type SearchTaskRequest struct {
+	Condition *Condition `json:"c"`
+	Kind      *string    `json:"k"`
+	Size      *uint      `json:"s"`
+	Internal  bool       `json:"i"`
+}

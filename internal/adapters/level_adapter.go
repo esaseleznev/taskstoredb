@@ -85,6 +85,40 @@ out:
 	return tasks, err
 }
 
+func (l LevelAdapter) SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error) {
+	tasks = make([]contract.Task, 0)
+	prefix := prefixTask + "-"
+	if kind != nil {
+		prefix = prefix + *kind + "-"
+	}
+	r := util.BytesPrefix([]byte(prefix))
+	iter := l.db.NewIterator(r, nil)
+
+out:
+	for iter.Next() {
+		task := contract.Task{}
+		err := json.Unmarshal(iter.Value(), &task)
+		if err != nil {
+			return tasks, fmt.Errorf("task unmarshal error: %v", err)
+		}
+		if condition == nil || ConditionCalculateTask(&task, condition) {
+			task.Id = string(iter.Key())
+			tasks = append(tasks, task)
+			if size != nil {
+				*size--
+			}
+		}
+		if size != nil && *size == 0 {
+			break out
+		}
+	}
+
+	iter.Release()
+	err = iter.Error()
+
+	return tasks, err
+}
+
 func (l LevelAdapter) GetFirstInGroup(group string) (id string, err error) {
 	prefix := prefixGroup + "-" + group + "-"
 	iter := l.db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)

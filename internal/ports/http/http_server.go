@@ -81,6 +81,7 @@ func (h *HttpServer) Start() {
 	http.HandleFunc("GET /task/{id}/group/{group}", h.handle(Get))
 	http.HandleFunc("GET /task/group/{group}", h.handle(GetFirstInGroup))
 	http.HandleFunc("GET /pool/{owner}/kind/{kind}", h.handle(Pool))
+	http.HandleFunc("POST /task/search", h.handle(SearchTask))
 
 	nextRequestID := func() string {
 		return strconv.FormatInt(time.Now().UnixNano(), 10)
