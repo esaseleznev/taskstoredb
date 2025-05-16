@@ -7,34 +7,34 @@ import (
 	"github.com/serialx/hashring"
 )
 
-type QueryTaskDbAdapter interface {
+type SearchTaskDbAdapter interface {
 	SearchTask(condition contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
 }
 
-type QueryTaskClusterAdapter interface {
+type SearchTaskClusterAdapter interface {
 	SearchTask(url string, condition contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
 }
 
-type QueryTaskHandler struct {
-	db      QueryTaskDbAdapter
-	cluster QueryTaskClusterAdapter
+type SearchTaskHandler struct {
+	db      SearchTaskDbAdapter
+	cluster SearchTaskClusterAdapter
 	ring    *hashring.HashRing
 	curUrl  string
 	nodes   []string
 }
 
 func NewQyeryTaskHandler(
-	db QueryTaskDbAdapter,
-	cluster QueryTaskClusterAdapter,
+	db SearchTaskDbAdapter,
+	cluster SearchTaskClusterAdapter,
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
-) QueryTaskHandler {
+) SearchTaskHandler {
 	if db == nil {
-		panic("nil queryTaskDbAdapter")
+		panic("nil SearchTaskDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil QueryTaskClusterAdapter")
+		panic("nil SearchTaskClusterAdapter")
 	}
 	if ring == nil {
 		panic("nil ring")
@@ -46,10 +46,10 @@ func NewQyeryTaskHandler(
 		panic("nodes is empty")
 	}
 
-	return QueryTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return SearchTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
 }
 
-func (h QueryTaskHandler) Handle(condition contract.Condition, kind *string, size *uint, internal bool) (tasks []contract.Task, err error) {
+func (h SearchTaskHandler) Handle(condition contract.Condition, kind *string, size *uint, internal bool) (tasks []contract.Task, err error) {
 	if len(condition.Operations) == 0 && len(condition.Operations) == 0 {
 		return tasks, errors.New("owner is empty")
 	}
