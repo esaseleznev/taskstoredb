@@ -23,7 +23,7 @@ type SearchTaskHandler struct {
 	nodes   []string
 }
 
-func NewQyeryTaskHandler(
+func NewSearchTaskHandler(
 	db SearchTaskDbAdapter,
 	cluster SearchTaskClusterAdapter,
 	ring *hashring.HashRing,

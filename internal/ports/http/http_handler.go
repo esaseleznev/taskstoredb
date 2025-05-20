@@ -119,6 +119,9 @@ func Pool(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	if len(tasks) == 0 {
+		tasks = []contract.Task{}
+	}
 
 	return encode(w, int(http.StatusOK), tasks)
 }
@@ -151,5 +154,21 @@ func SearchTask(a app.Application, w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
+	if len(tasks) == 0 {
+		tasks = []contract.Task{}
+	}
 	return encode(w, int(http.StatusOK), tasks)
+}
+
+func SearchDeleteTask(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.SearchTaskRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	err = a.Commands.SearchDeleteTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	if err != nil {
+		return err
+	}
+	return emptyBody(w)
 }

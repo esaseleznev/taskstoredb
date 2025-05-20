@@ -35,16 +35,17 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 
 	return app.Application{
 		Commands: app.Commands{
-			AddTask:    command.NewAddTaskHandler(db, cluster, ring, config.Cluster.Current),
-			UpdateTask: command.NewUpdateTaskHendler(db, cluster, ring, config.Cluster.Current),
-			OwnerReg:   command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers),
-			SetOffset:  command.NewSetOffsetHandler(db, cluster, ring, config.Cluster.Current, servers),
+			AddTask:          command.NewAddTaskHandler(db, cluster, ring, config.Cluster.Current),
+			UpdateTask:       command.NewUpdateTaskHendler(db, cluster, ring, config.Cluster.Current),
+			OwnerReg:         command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers),
+			SetOffset:        command.NewSetOffsetHandler(db, cluster, ring, config.Cluster.Current, servers),
+			SearchDeleteTask: command.NewSearchDeleteTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
 		},
 		Queries: app.Queries{
 			GetFirstInGroup: query.NewGetFirstInGroupHandler(db, cluster, ring, config.Cluster.Current),
 			Pool:            query.NewPoolHandler(db, cluster, ring, config.Cluster.Current, servers),
 			Get:             query.NewGetHandler(db, cluster, ring, config.Cluster.Current),
-			SearchTask:      query.NewQyeryTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
+			SearchTask:      query.NewSearchTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
 		},
 	}
 }

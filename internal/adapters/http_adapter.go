@@ -293,3 +293,35 @@ func (a HttpClusterAdapter) SearchTask(
 
 	return tasks, err
 }
+
+func (a HttpClusterAdapter) SearchDeleteTask(
+	url string,
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+) (err error) {
+	r := contract.SearchTaskRequest{
+		Condition: condition,
+		Kind:      kind,
+		Size:      size,
+		Internal:  true,
+	}
+
+	json_data, err := json.Marshal(r)
+	if err != nil {
+		return fmt.Errorf("request format error: %v", err)
+	}
+
+	resp, err := http.Post(url+"/task/search/delete", "application/json", bytes.NewBuffer(json_data))
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	return nil
+}
