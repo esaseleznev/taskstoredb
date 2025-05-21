@@ -4,7 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/esaseleznev/taskstoredb/internal/adapters"
+	cluster "github.com/esaseleznev/taskstoredb/internal/adapters/cluster"
+	store "github.com/esaseleznev/taskstoredb/internal/adapters/store"
 	"github.com/esaseleznev/taskstoredb/internal/app"
 	"github.com/esaseleznev/taskstoredb/internal/app/command"
 	"github.com/esaseleznev/taskstoredb/internal/app/query"
@@ -27,8 +28,8 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 	if err != nil {
 		logger.Fatalf("Could not open leveldb %+v\n", err)
 	}
-	db := adapters.NewLevelAdapter(level)
-	cluster := adapters.HttpClusterAdapter{}
+	db := store.NewLevelAdapter(level)
+	cluster := cluster.HttpClusterAdapter{}
 
 	servers := config.Cluster.Servers
 	ring := hashring.New(servers)
