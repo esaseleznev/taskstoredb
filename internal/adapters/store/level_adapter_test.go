@@ -24,7 +24,7 @@ func TestLevelAdapter_Add(t *testing.T) {
 	_ = adapter.OwnerReg("103", []string{"TEST"})
 
 	for i := 1; i < 5; i++ {
-		id, err := adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		id, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -47,21 +47,21 @@ func TestLevelAdapter_Pool(t *testing.T) {
 	_ = adapter.OwnerReg("100", []string{"TEST"})
 	var id string
 	for i := 1; i < 5; i++ {
-		id, err = adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		id, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	for i := 1; i < 5; i++ {
-		_, err = adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		_, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	for i := 1; i < 100; i++ {
-		_, err = adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+		_, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -105,7 +105,7 @@ func TestLevelAdapter_UpdateFailed(t *testing.T) {
 	groupIn := "12345"
 
 	_ = adapter.OwnerReg("100", []string{"TEST"})
-	id, err := adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+	id, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,12 +135,12 @@ func TestLevelAdapter_GetFirstInGroup(t *testing.T) {
 
 	groupIn := "12345"
 
-	idIn, err := adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+	idIn, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = adapter.Add(groupIn, "TEST", map[string]string{"pid": groupIn, "status": "dead"})
+	_, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {
 		t.Fatal(err)
 	}

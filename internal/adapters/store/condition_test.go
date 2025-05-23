@@ -65,7 +65,7 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 
 	operator := contract.And
 	trueCondition := contract.Condition{
-		Operator: &operator,
+		LogicalOperator: &operator,
 		Operations: []contract.Operation{
 			{
 				Field:    "id",
@@ -117,7 +117,7 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 
 	// Test with an empty condition
 	emptyCondition := contract.Condition{
-		Operator:   &operator,
+		LogicalOperator:   &operator,
 		Operations: []contract.Operation{},
 	}
 
@@ -128,7 +128,7 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 
 	// Test with a condition that always evaluates to false
 	falseCondition := contract.Condition{
-		Operator: &operator,
+		LogicalOperator: &operator,
 		Operations: []contract.Operation{
 			{
 				Field:    "id",

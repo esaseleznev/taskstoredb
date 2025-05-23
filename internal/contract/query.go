@@ -20,13 +20,13 @@ const (
 )
 
 type Operation struct {
-	Operator Operator
-	Value    any
-	Field    string
+	Operator Operator `json:"op"`
+	Value    any      `json:"val"`
+	Field    string   `json:"fld"`
 }
 
 type Condition struct {
-	Operator   *LogicalOperator
-	Operations []Operation
-	Conditions []Condition
+	LogicalOperator *LogicalOperator `json:"lop"`
+	Operations      []Operation      `json:"ops"`
+	Conditions      []Condition      `json:"conds"`
 }

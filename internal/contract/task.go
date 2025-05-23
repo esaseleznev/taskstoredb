@@ -21,3 +21,12 @@ const (
 	COMPLETED Status = 3
 	FAILED    Status = 4
 )
+
+type TaskUpdate struct {
+	Kind   *string           `json:"k"`
+	Group  *string           `json:"g"`
+	Owner  *string           `json:"o,omitzero"`
+	Status *Status           `json:"s"`
+	Param  map[string]string `json:"p"`
+	Error  *string           `json:"e,omitzero"`
+}

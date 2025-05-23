@@ -11,6 +11,7 @@ type AddTaskDbAdapter interface {
 	Add(
 		group string,
 		kind string,
+		owner *string,
 		param map[string]string,
 	) (id string, err error)
 }
@@ -20,6 +21,7 @@ type AddTaskClusterAdapter interface {
 		url string,
 		group string,
 		kind string,
+		owner *string,
 		param map[string]string,
 	) (id string, err error)
 }
@@ -56,6 +58,7 @@ func NewAddTaskHandler(
 func (h AddTaskHandler) Handle(
 	group string,
 	kind string,
+	owner *string,
 	param map[string]string,
 ) (id string, err error) {
 	if group == "" {
@@ -71,8 +74,8 @@ func (h AddTaskHandler) Handle(
 	}
 
 	if node == h.curUrl {
-		return h.db.Add(group, kind, param)
+		return h.db.Add(group, kind, owner, param)
 	} else {
-		return h.cluster.Add(node, group, kind, param)
+		return h.cluster.Add(node, group, kind, owner, param)
 	}
 }

@@ -20,9 +20,9 @@ func ConditionCalculateTask(
 	if len(condition.Operations) != 0 {
 		for _, operation := range condition.Operations {
 			calcRes := operationCalculateTask(task, &operation)
-			if condition.Operator == nil || *condition.Operator == contract.And {
+			if condition.LogicalOperator == nil || *condition.LogicalOperator == contract.And {
 				res = res && calcRes
-			} else if *condition.Operator == contract.Or {
+			} else if *condition.LogicalOperator == contract.Or {
 				res = res || calcRes
 			}
 		}
@@ -31,9 +31,9 @@ func ConditionCalculateTask(
 	if len(condition.Conditions) != 0 {
 		for _, condition := range condition.Conditions {
 			calcRes := ConditionCalculateTask(task, &condition)
-			if condition.Operator == nil || *condition.Operator == contract.And {
+			if condition.LogicalOperator == nil || *condition.LogicalOperator == contract.And {
 				res = res && calcRes
-			} else if *condition.Operator == contract.Or {
+			} else if *condition.LogicalOperator == contract.Or {
 				res = res || calcRes
 			}
 		}

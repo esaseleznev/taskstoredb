@@ -24,7 +24,7 @@ func Add(a app.Application, w http.ResponseWriter, r *http.Request) error {
 		return newBadRequestError(err)
 	}
 
-	id, err := a.Commands.AddTask.Handle(t.Group, t.Kind, t.Param)
+	id, err := a.Commands.AddTask.Handle(t.Group, t.Kind, t.Owner, t.Param)
 	if err != nil {
 		return err
 	}
@@ -167,6 +167,19 @@ func SearchDeleteTask(a app.Application, w http.ResponseWriter, r *http.Request)
 	}
 
 	err = a.Commands.SearchDeleteTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	if err != nil {
+		return err
+	}
+	return emptyBody(w)
+}
+
+func SearchUpdateTask(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.SearchUpdateTaskRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	err = a.Commands.SearchUpdateTask.Handle(o.Up, o.Condition, o.Kind, o.Size, o.Internal)
 	if err != nil {
 		return err
 	}

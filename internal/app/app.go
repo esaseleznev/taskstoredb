@@ -16,6 +16,7 @@ type Commands struct {
 	OwnerReg         command.OwnerRegHandler
 	SetOffset        command.SetOffsetHandler
 	SearchDeleteTask command.SearchDeleteTaskHandler
+	SearchUpdateTask command.SearchUpdateTaskHandler
 }
 
 type Queries struct {

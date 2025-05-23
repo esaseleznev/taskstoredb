@@ -7,6 +7,7 @@ type ErrorResponse struct {
 type AddRequest struct {
 	Group string            `json:"g"`
 	Kind  string            `json:"k"`
+	Owner *string           `json:"o"`
 	Param map[string]string `json:"p"`
 }
 
@@ -40,6 +41,14 @@ type GetFirstInGroupResponse struct {
 }
 
 type SearchTaskRequest struct {
+	Condition *Condition `json:"c"`
+	Kind      *string    `json:"k"`
+	Size      *uint      `json:"s"`
+	Internal  bool       `json:"i"`
+}
+
+type SearchUpdateTaskRequest struct {
+	Up        TaskUpdate
 	Condition *Condition `json:"c"`
 	Kind      *string    `json:"k"`
 	Size      *uint      `json:"s"`

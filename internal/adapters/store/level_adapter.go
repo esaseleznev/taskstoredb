@@ -179,7 +179,7 @@ func (l LevelAdapter) SetOffset(owner string, kind string, startId string) (err 
 	return
 }
 
-func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (id string, err error) {
+func (l *LevelAdapter) Add(group string, kind string, owner *string, param map[string]string) (id string, err error) {
 	rr, ok := l.kinds[kind]
 	if !ok {
 		owners, err := l.getOwnersKind(kind)
@@ -190,7 +190,9 @@ func (l *LevelAdapter) Add(group string, kind string, param map[string]string) (
 		l.kinds[kind] = rr
 	}
 
-	owner := rr.get()
+	if owner == nil {
+		owner = rr.get()
+	}
 	task := contract.Task{
 		Kind:   kind,
 		Group:  group,

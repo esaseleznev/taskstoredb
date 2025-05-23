@@ -41,6 +41,7 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 			OwnerReg:         command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers),
 			SetOffset:        command.NewSetOffsetHandler(db, cluster, ring, config.Cluster.Current, servers),
 			SearchDeleteTask: command.NewSearchDeleteTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
+			SearchUpdateTask: command.NewSearchUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
 		},
 		Queries: app.Queries{
 			GetFirstInGroup: query.NewGetFirstInGroupHandler(db, cluster, ring, config.Cluster.Current),

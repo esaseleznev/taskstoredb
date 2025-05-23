@@ -60,39 +60,35 @@ func (h SearchDeleteTaskHandler) Handle(condition *contract.Condition, kind *str
 		return errors.New("condition is empty")
 	}
 
-	var portion []contract.Task
 	if internal {
-		portion, err = h.db.SearchTask(condition, kind, size)
-		if err != nil {
-			return err
-		}
-		for _, task := range portion {
-			err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+		return h.internal(condition, kind, size)
 	}
 
 	for _, node := range h.nodes {
 		if node == h.curUrl {
-			portion, err = h.db.SearchTask(condition, kind, size)
+			err = h.internal(condition, kind, size)
 			if err != nil {
 				return err
 			}
-			for _, task := range portion {
-				err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error)
-				if err != nil {
-					return err
-				}
-			}
-
 		} else {
 			err = h.cluster.SearchDeleteTask(node, condition, kind, size)
 			if err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+func (h SearchDeleteTaskHandler) internal(condition *contract.Condition, kind *string, size *uint) (err error) {
+	portion, err := h.db.SearchTask(condition, kind, size)
+	if err != nil {
+		return err
+	}
+	for _, task := range portion {
+		err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
