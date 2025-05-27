@@ -81,7 +81,11 @@ func (h UpdateTaskHendler) Handle(
 	}
 
 	if node == h.curUrl {
-		return h.db.Update(id, status, param, error, &id)
+		var offset *string
+		if status == contract.COMPLETED || status == contract.FAILED {
+			offset = &id
+		}
+		return h.db.Update(id, status, param, error, offset)
 	} else {
 		return h.cluster.Update(node, group, id, status, param, error)
 	}
