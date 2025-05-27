@@ -151,40 +151,6 @@ func (a HttpClusterAdapter) OwnerReg(url string, owner string, kinds []string) (
 	return err
 }
 
-func (a HttpClusterAdapter) SetOffset(url string, owner string, kind string, startId string) (err error) {
-	r := contract.SetOffsetRequest{
-		Owner:    owner,
-		Kind:     kind,
-		StartId:  startId,
-		Internal: true,
-	}
-
-	json_data, err := json.Marshal(r)
-	if err != nil {
-		return fmt.Errorf("request format error: %v", err)
-	}
-
-	req, err := http.NewRequest(http.MethodPut, url+"/offset", bytes.NewBuffer(json_data))
-	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		return fmt.Errorf("create request error: %v", err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("request url %v error: %v", url, err)
-	}
-	defer resp.Body.Close()
-
-	err = a.isError(resp)
-	if err != nil {
-		return fmt.Errorf("request url %v error: %v", url, err)
-	}
-
-	return err
-}
-
 func (a HttpClusterAdapter) GetFirstInGroup(
 	url string,
 	group string,
@@ -278,6 +244,43 @@ func (a HttpClusterAdapter) SearchTask(
 	}
 
 	resp, err := http.Post(url+"/task/search", "application/json", bytes.NewBuffer(json_data))
+	if err != nil {
+		return nil, fmt.Errorf("request url %v error: %v", url, err)
+	}
+	defer resp.Body.Close()
+
+	err = a.isError(resp)
+	if err != nil {
+		return nil, fmt.Errorf("request url %v error: %v", url, err)
+	}
+
+	json.NewDecoder(resp.Body).Decode(&tasks)
+	if err != nil {
+		return nil, fmt.Errorf("response format error: %v", err)
+	}
+
+	return tasks, err
+}
+
+func (a HttpClusterAdapter) SearchErrorTask(
+	url string,
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+) (tasks []contract.Task, err error) {
+	r := contract.SearchTaskRequest{
+		Condition: condition,
+		Kind:      kind,
+		Size:      size,
+		Internal:  true,
+	}
+
+	json_data, err := json.Marshal(r)
+	if err != nil {
+		return nil, fmt.Errorf("request format error: %v", err)
+	}
+
+	resp, err := http.Post(url+"/error/search", "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
 		return nil, fmt.Errorf("request url %v error: %v", url, err)
 	}

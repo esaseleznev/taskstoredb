@@ -16,6 +16,7 @@ type SearchUpdateTaskDbAdapter interface {
 		status contract.Status,
 		param map[string]string,
 		error *string,
+		offset *string,
 	) (err error)
 }
 
@@ -119,12 +120,12 @@ func (h SearchUpdateTaskHandler) internal(up contract.TaskUpdate, condition *con
 		}
 
 		if !isNew {
-			err = h.db.Update(task.Id, task.Status, task.Param, task.Error)
+			err = h.db.Update(task.Id, task.Status, task.Param, task.Error, nil)
 			if err != nil {
 				return err
 			}
 		} else {
-			err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error)
+			err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error, nil)
 			if err != nil {
 				return err
 			}

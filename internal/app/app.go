@@ -14,7 +14,6 @@ type Commands struct {
 	AddTask          command.AddTaskHandler
 	UpdateTask       command.UpdateTaskHendler
 	OwnerReg         command.OwnerRegHandler
-	SetOffset        command.SetOffsetHandler
 	SearchDeleteTask command.SearchDeleteTaskHandler
 	SearchUpdateTask command.SearchUpdateTaskHandler
 }
@@ -24,4 +23,5 @@ type Queries struct {
 	Pool            query.PoolHandler
 	Get             query.GetHandler
 	SearchTask      query.SearchTaskHandler
+	SearchError     query.SearchErrorTaskHandler
 }

@@ -29,13 +29,6 @@ type OwnerRegRequest struct {
 	Internal bool     `json:"i"`
 }
 
-type SetOffsetRequest struct {
-	Owner    string `json:"o"`
-	Kind     string `json:"k"`
-	StartId  string `json:"id"`
-	Internal bool   `json:"i"`
-}
-
 type GetFirstInGroupResponse struct {
 	Id string `json:"id"`
 }

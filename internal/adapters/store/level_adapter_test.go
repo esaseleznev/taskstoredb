@@ -60,25 +60,18 @@ func TestLevelAdapter_Pool(t *testing.T) {
 		}
 	}
 
-	for i := 1; i < 100; i++ {
-		_, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	err = adapter.SetOffset("100", "TEST", id)
+	err = adapter.Update(id, contract.SCHEDULED, map[string]string{"pid": groupIn, "status": "dead"}, nil, &id)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tasks, err := adapter.Pool("100", "TEST", 100)
+	tasks, err := adapter.Pool("100", "TEST", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if len(tasks) != 5 {
-		t.Errorf("not correct return count tasks")
+		t.Errorf("not correct return count tasks %d", len(tasks))
 	}
 
 	if tasks[0].Id != id {
@@ -110,7 +103,7 @@ func TestLevelAdapter_UpdateFailed(t *testing.T) {
 		t.Fatal(err)
 	}
 	errorTxt := "error test"
-	err = adapter.Update(id, contract.FAILED, map[string]string{"pid": groupIn, "status": "dead"}, &errorTxt)
+	err = adapter.Update(id, contract.FAILED, map[string]string{"pid": groupIn, "status": "dead"}, &errorTxt, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

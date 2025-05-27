@@ -77,11 +77,11 @@ func (h *HttpServer) Start() {
 	http.HandleFunc("POST /task", h.handle(Add))
 	http.HandleFunc("PATCH /task", h.handle(Update))
 	http.HandleFunc("PUT /owner", h.handle(OwnerReg))
-	http.HandleFunc("PUT /offset", h.handle(SetOffset))
 	http.HandleFunc("GET /task/{id}/group/{group}", h.handle(Get))
 	http.HandleFunc("GET /task/group/{group}", h.handle(GetFirstInGroup))
 	http.HandleFunc("GET /pool/{owner}/kind/{kind}", h.handle(Pool))
 	http.HandleFunc("POST /task/search", h.handle(SearchTask))
+	http.HandleFunc("POST /error/search", h.handle(SearchError))
 	http.HandleFunc("POST /task/search/delete", h.handle(SearchDeleteTask))
 	http.HandleFunc("POST /task/search/update", h.handle(SearchUpdateTask))
 

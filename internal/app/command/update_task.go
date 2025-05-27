@@ -14,6 +14,7 @@ type UpdateTaskDbAdapter interface {
 		status contract.Status,
 		param map[string]string,
 		error *string,
+		offset *string,
 	) (err error)
 }
 
@@ -80,7 +81,7 @@ func (h UpdateTaskHendler) Handle(
 	}
 
 	if node == h.curUrl {
-		return h.db.Update(id, status, param, error)
+		return h.db.Update(id, status, param, error, &id)
 	} else {
 		return h.cluster.Update(node, group, id, status, param, error)
 	}

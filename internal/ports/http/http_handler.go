@@ -66,20 +66,6 @@ func OwnerReg(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	return emptyBody(w)
 }
 
-func SetOffset(a app.Application, w http.ResponseWriter, r *http.Request) error {
-	o, err := decode[contract.SetOffsetRequest](r)
-	if err != nil {
-		return newBadRequestError(err)
-	}
-
-	err = a.Commands.SetOffset.Handle(o.Owner, o.Kind, o.StartId, o.Internal)
-	if err != nil {
-		return err
-	}
-
-	return emptyBody(w)
-}
-
 func GetFirstInGroup(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	group := r.PathValue("group")
 	if group == "" {
@@ -151,6 +137,22 @@ func SearchTask(a app.Application, w http.ResponseWriter, r *http.Request) error
 	}
 
 	tasks, err := a.Queries.SearchTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	if err != nil {
+		return err
+	}
+	if len(tasks) == 0 {
+		tasks = []contract.Task{}
+	}
+	return encode(w, int(http.StatusOK), tasks)
+}
+
+func SearchError(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.SearchTaskRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	tasks, err := a.Queries.SearchError.Handle(o.Condition, o.Kind, o.Size, o.Internal)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ type SearchDeleteTaskDbAdapter interface {
 		status contract.Status,
 		param map[string]string,
 		error *string,
+		offset *string,
 	) (err error)
 }
 
@@ -86,7 +87,7 @@ func (h SearchDeleteTaskHandler) internal(condition *contract.Condition, kind *s
 		return err
 	}
 	for _, task := range portion {
-		err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error)
+		err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error, nil)
 		if err != nil {
 			return err
 		}

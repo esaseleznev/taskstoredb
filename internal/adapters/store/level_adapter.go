@@ -86,6 +86,14 @@ out:
 }
 
 func (l LevelAdapter) SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error) {
+	return l.searchTask(condition, prefixTask, kind, size)
+}
+
+func (l LevelAdapter) SearchErrorTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error) {
+	return l.searchTask(condition, prefixError, kind, size)
+}
+
+func (l LevelAdapter) searchTask(condition *contract.Condition, prefixTask string, kind *string, size *uint) (tasks []contract.Task, err error) {
 	tasks = make([]contract.Task, 0)
 	prefix := prefixTask + "-"
 	if kind != nil {
@@ -170,15 +178,6 @@ func (l LevelAdapter) OwnerUnreg(owner string) (err error) {
 	return err
 }
 
-func (l LevelAdapter) SetOffset(owner string, kind string, startId string) (err error) {
-	keyOffset := fmt.Sprintf("%s-%s-%s", prefixOffset, owner, kind)
-	err = l.db.Put([]byte(keyOffset), []byte(startId), nil)
-	if err != nil {
-		return fmt.Errorf("could not set offset: %v", err)
-	}
-	return
-}
-
 func (l *LevelAdapter) Add(group string, kind string, owner *string, param map[string]string) (id string, err error) {
 	rr, ok := l.kinds[kind]
 	if !ok {
@@ -227,6 +226,8 @@ func (l LevelAdapter) Update(
 	status contract.Status,
 	param map[string]string,
 	error *string,
+	offset *string,
+
 ) (err error) {
 	task, err := l.Get(id)
 	if err != nil {
@@ -284,6 +285,11 @@ func (l LevelAdapter) Update(
 		batch.Delete([]byte(id))
 	default:
 		return fmt.Errorf("unexpected status: %v", status)
+	}
+
+	if offset != nil && task.Owner != nil {
+		keyOffset := fmt.Sprintf("%s-%s-%s", prefixOffset, *task.Owner, task.Kind)
+		batch.Put([]byte(keyOffset), []byte(*offset))
 	}
 
 	err = l.db.Write(batch, nil)
