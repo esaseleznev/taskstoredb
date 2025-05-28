@@ -1,9 +1,9 @@
-package adapters
+package common
 
 import "os"
 
 // tempfile returns a temporary file path.
-func tempfile(name string) string {
+func Tempfile(name string) string {
 	f, err := os.CreateTemp("", name+"-")
 	if err != nil {
 		panic(err)

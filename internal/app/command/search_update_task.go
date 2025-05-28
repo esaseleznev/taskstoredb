@@ -125,11 +125,13 @@ func (h SearchUpdateTaskHandler) internal(up contract.TaskUpdate, condition *con
 				return err
 			}
 		} else {
-			err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error, nil)
+			// order is important to not lose the task
+			// if the outcome is bad there may be a duplicate
+			_, err = h.cluster.Add(h.curUrl, task.Group, task.Kind, task.Owner, task.Param)
 			if err != nil {
 				return err
 			}
-			_, err = h.cluster.Add(h.curUrl, task.Group, task.Kind, task.Owner, task.Param)
+			err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error, nil)
 			if err != nil {
 				return err
 			}

@@ -1,4 +1,4 @@
-package adapters
+package common
 
 import "sync"
 
@@ -9,17 +9,17 @@ const (
 
 var alphabets []rune = []rune("0123456789ABCDEFGHJKMNPQRSTVWXYZ")
 
-type tsid struct {
+type Tsid struct {
 	mu  *sync.Mutex
 	ts  int64
 	num int32
 }
 
-func newTsid() *tsid {
-	return &tsid{mu: &sync.Mutex{}}
+func NewTsid() *Tsid {
+	return &Tsid{mu: &sync.Mutex{}}
 }
 
-func (l *tsid) next(ts int64) string {
+func (l *Tsid) Next(ts int64) string {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	ts = (ts - epoch) << randomBitSize
@@ -34,7 +34,7 @@ func (l *tsid) next(ts int64) string {
 	return l.toString(val)
 }
 
-func (t *tsid) toString(number int64) string {
+func (t *Tsid) toString(number int64) string {
 	chars := make([]rune, 13)
 
 	chars[0] = alphabets[((number >> 60) & 0b11111)]

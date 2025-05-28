@@ -5,7 +5,7 @@ import (
 	"os"
 
 	cluster "github.com/esaseleznev/taskstoredb/internal/adapters/cluster"
-	store "github.com/esaseleznev/taskstoredb/internal/adapters/store"
+	store "github.com/esaseleznev/taskstoredb/internal/adapters/store/leveldb"
 	"github.com/esaseleznev/taskstoredb/internal/app"
 	"github.com/esaseleznev/taskstoredb/internal/app/command"
 	"github.com/esaseleznev/taskstoredb/internal/app/query"

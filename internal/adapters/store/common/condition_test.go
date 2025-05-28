@@ -1,4 +1,4 @@
-package adapters
+package common
 
 import (
 	"testing"
@@ -117,8 +117,8 @@ func TestCondition_ConditionCalculate(t *testing.T) {
 
 	// Test with an empty condition
 	emptyCondition := contract.Condition{
-		LogicalOperator:   &operator,
-		Operations: []contract.Operation{},
+		LogicalOperator: &operator,
+		Operations:      []contract.Operation{},
 	}
 
 	res = ConditionCalculateTask(&task, &emptyCondition)

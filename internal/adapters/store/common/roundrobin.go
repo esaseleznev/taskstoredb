@@ -1,19 +1,19 @@
-package adapters
+package common
 
 import "sync/atomic"
 
-type roundRobin struct {
+type RoundRobin struct {
 	owners []string
 	num    uint32
 }
 
-func newRoundRobind(owners ...string) *roundRobin {
-	return &roundRobin{
+func NewRoundRobind(owners ...string) *RoundRobin {
+	return &RoundRobin{
 		owners: owners,
 	}
 }
 
-func (r *roundRobin) get() *string {
+func (r *RoundRobin) Get() *string {
 	len := len(r.owners)
 	if len == 0 {
 		return nil

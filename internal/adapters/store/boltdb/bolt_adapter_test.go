@@ -1,4 +1,4 @@
-package adapters
+package boltdb
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	bbolt "go.etcd.io/bbolt"
 )
 
@@ -26,7 +27,7 @@ func TestBoltAdapter_OwnerReg(t *testing.T) {
 	}
 
 	err = db.View(func(tx *bbolt.Tx) error {
-		c := tx.Bucket([]byte(prefixOwner))
+		c := tx.Bucket([]byte(common.PrefixOwner))
 		for _, itr := range kinds {
 			v := c.Get([]byte(itr + "-" + owner))
 			if v == nil {
@@ -64,7 +65,7 @@ func TestBoltAdapter_Add(t *testing.T) {
 			t.Fatal(err)
 		}
 		err = db.View(func(tx *bbolt.Tx) error {
-			c := tx.Bucket([]byte(prefixTask))
+			c := tx.Bucket([]byte(common.PrefixTask))
 			v := c.Get([]byte(id))
 			if v == nil {
 				t.Errorf("not correct add task")
@@ -112,7 +113,7 @@ func TestBoltAdapter_GetFirstInGroup(t *testing.T) {
 }
 
 func initBoltDb() (path string, db *bbolt.DB, adapter *BoltAdapter, err error) {
-	path = tempfile("bolt")
+	path = common.Tempfile("bolt")
 	db, err = bbolt.Open(path, 0o600, nil)
 	adapter = NewBoltAdapter(db)
 	return path, db, adapter, err

@@ -1,4 +1,4 @@
-package adapters
+package boltdb
 
 import (
 	"bytes"
@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
+	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 	bolt "go.etcd.io/bbolt"
 )
 
 type BoltAdapter struct {
 	db    *bolt.DB
-	kinds map[string]*roundRobin
+	kinds map[string]*common.RoundRobin
 }
 
 func NewBoltAdapter(db *bolt.DB) *BoltAdapter {
@@ -22,12 +23,12 @@ func NewBoltAdapter(db *bolt.DB) *BoltAdapter {
 		panic("missing db")
 	}
 
-	return &BoltAdapter{db: db, kinds: make(map[string]*roundRobin)}
+	return &BoltAdapter{db: db, kinds: make(map[string]*common.RoundRobin)}
 }
 
 func (b BoltAdapter) GetFirstInGroup(group string) (id string, err error) {
 	err = b.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket([]byte(prefixGroup)).Cursor()
+		c := tx.Bucket([]byte(common.PrefixGroup)).Cursor()
 		prefix := []byte(group + "-")
 		k, _ := c.Seek(prefix)
 		if k != nil {
@@ -43,24 +44,14 @@ func (b BoltAdapter) GetFirstInGroup(group string) (id string, err error) {
 }
 
 func (b BoltAdapter) OwnerReg(owner string, kinds []string) (err error) {
-	offset := Offset{
-		Value: 0,
-		Ts:    time.Now(),
-	}
-
-	offsetBytes, err := json.Marshal(offset)
-	if err != nil {
-		return fmt.Errorf("offset marshal error: %v", err)
-	}
-
 	err = b.db.Update(func(tx *bolt.Tx) error {
-		bktOwner, err := tx.CreateBucketIfNotExists([]byte(prefixOwner))
+		bktOwner, err := tx.CreateBucketIfNotExists([]byte(common.PrefixOwner))
 		if err != nil {
 			return fmt.Errorf("create bucket 'owner' error: %v", err)
 		}
 
 		for _, itr := range kinds {
-			err = bktOwner.Put([]byte(itr+"-"+owner), offsetBytes)
+			err = bktOwner.Put([]byte(itr+"-"+owner), nil)
 			if err != nil {
 				return fmt.Errorf("could not set owner in bucket 'owner': %v", err)
 			}
@@ -79,11 +70,11 @@ func (b BoltAdapter) Add(group string, kind string, param map[string]string) (id
 		if err != nil {
 			return id, err
 		}
-		rr = newRoundRobind(owners...)
+		rr = common.NewRoundRobind(owners...)
 		b.kinds[kind] = rr
 	}
 
-	owner := rr.get()
+	owner := rr.Get()
 	task := contract.Task{
 		Kind:   kind,
 		Group:  group,
@@ -99,7 +90,7 @@ func (b BoltAdapter) Add(group string, kind string, param map[string]string) (id
 	}
 
 	err = b.db.Update(func(tx *bolt.Tx) error {
-		bktTsk, err := tx.CreateBucketIfNotExists([]byte(prefixTask))
+		bktTsk, err := tx.CreateBucketIfNotExists([]byte(common.PrefixTask))
 		if err != nil {
 			return fmt.Errorf("create bucket 'task' error: %v", err)
 		}
@@ -116,7 +107,7 @@ func (b BoltAdapter) Add(group string, kind string, param map[string]string) (id
 			return fmt.Errorf("could not set task in bucket 'task': %v", err)
 		}
 
-		bktGrp, err := tx.CreateBucketIfNotExists([]byte(prefixGroup))
+		bktGrp, err := tx.CreateBucketIfNotExists([]byte(common.PrefixGroup))
 		if err != nil {
 			return fmt.Errorf("next sequence bucket 'group' error: %v", err)
 		}
@@ -136,7 +127,7 @@ func (b BoltAdapter) getOwnersKind(kind string) (owners []string, err error) {
 	prefix := []byte(kind + "-")
 	owners = []string{}
 	err = b.db.View(func(tx *bolt.Tx) error {
-		c := tx.Bucket([]byte(prefixOwner)).Cursor()
+		c := tx.Bucket([]byte(common.PrefixOwner)).Cursor()
 		for k, _ := c.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, _ = c.Next() {
 			its := strings.Split(string(k), "-")
 			if len(its) == 2 {

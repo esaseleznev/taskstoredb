@@ -1,12 +1,13 @@
-package adapters
+package leveldb
 
 import (
 	"os"
 	"strings"
 	"testing"
 
+	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
-	leveldb "github.com/syndtr/goleveldb/leveldb"
+	level "github.com/syndtr/goleveldb/leveldb"
 )
 
 func TestLevelAdapter_Add(t *testing.T) {
@@ -109,8 +110,8 @@ func TestLevelAdapter_UpdateFailed(t *testing.T) {
 	}
 	id = strings.Replace(
 		id,
-		prefixTask,
-		prefixError,
+		common.PrefixTask,
+		common.PrefixError,
 		1,
 	)
 	task, err := adapter.Get(id)
@@ -150,12 +151,12 @@ func TestLevelAdapter_GetFirstInGroup(t *testing.T) {
 
 func initLevelDb() (
 	path string,
-	db *leveldb.DB,
+	db *level.DB,
 	adapter *LevelAdapter,
 	err error,
 ) {
-	path = tempfile("leveldb")
-	db, err = leveldb.OpenFile(path, nil)
+	path = common.Tempfile("leveldb")
+	db, err = level.OpenFile(path, nil)
 	adapter = NewLevelAdapter(db)
 	return path, db, adapter, err
 }
