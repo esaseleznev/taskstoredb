@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	cluster "github.com/esaseleznev/taskstoredb/internal/adapters/cluster"
+	cluster "github.com/esaseleznev/taskstoredb/internal/adapters/cluster/http"
 	store "github.com/esaseleznev/taskstoredb/internal/adapters/store/leveldb"
 	"github.com/esaseleznev/taskstoredb/internal/app"
 	"github.com/esaseleznev/taskstoredb/internal/app/command"
