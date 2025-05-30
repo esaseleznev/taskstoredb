@@ -39,6 +39,7 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 			AddTask:               command.NewAddTaskHandler(db, cluster, ring, config.Cluster.Current),
 			UpdateTask:            command.NewUpdateTaskHendler(db, cluster, ring, config.Cluster.Current),
 			OwnerReg:              command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers),
+			OwnerUnReg:            command.NewOwnerUnRegHandler(db, cluster, ring, config.Cluster.Current, servers),
 			SearchDeleteTask:      command.NewSearchDeleteTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
 			SearchDeleteErrorTask: command.NewSearchDeleteErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
 			SearchUpdateTask:      command.NewSearchUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, servers),

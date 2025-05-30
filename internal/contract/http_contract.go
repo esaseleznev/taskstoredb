@@ -29,6 +29,11 @@ type OwnerRegRequest struct {
 	Internal bool     `json:"i"`
 }
 
+type OwnerUnRegRequest struct {
+	Owner    string `json:"o"`
+	Internal bool   `json:"i"`
+}
+
 type GetFirstInGroupResponse struct {
 	Id string `json:"id"`
 }

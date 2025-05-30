@@ -14,6 +14,7 @@ type Commands struct {
 	AddTask               command.AddTaskHandler
 	UpdateTask            command.UpdateTaskHendler
 	OwnerReg              command.OwnerRegHandler
+	OwnerUnReg            command.OwnerUnRegHandler
 	SearchDeleteTask      command.SearchDeleteTaskHandler
 	SearchDeleteErrorTask command.SearchDeleteErrorTaskHandler
 	SearchUpdateTask      command.SearchUpdateTaskHandler

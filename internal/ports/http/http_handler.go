@@ -66,6 +66,20 @@ func OwnerReg(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	return emptyBody(w)
 }
 
+func OwnerUnReg(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.OwnerUnRegRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	err = a.Commands.OwnerUnReg.Handle(o.Owner, o.Internal)
+	if err != nil {
+		return err
+	}
+
+	return emptyBody(w)
+}
+
 func GetFirstInGroup(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	group := r.PathValue("group")
 	if group == "" {

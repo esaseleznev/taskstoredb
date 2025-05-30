@@ -9,10 +9,9 @@ import (
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
 
-func (a HttpClusterAdapter) OwnerReg(url string, owner string, kinds []string) (err error) {
-	r := contract.OwnerRegRequest{
+func (a HttpClusterAdapter) OwnerUnReg(url string, owner string) (err error) {
+	r := contract.OwnerUnRegRequest{
 		Owner:    owner,
-		Kinds:    kinds,
 		Internal: true,
 	}
 
@@ -21,7 +20,7 @@ func (a HttpClusterAdapter) OwnerReg(url string, owner string, kinds []string) (
 		return fmt.Errorf("request format error: %v", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPut, url+"/owner/reg", bytes.NewBuffer(json_data))
+	req, err := http.NewRequest(http.MethodPut, url+"/owner/unreg", bytes.NewBuffer(json_data))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return fmt.Errorf("create request error: %v", err)

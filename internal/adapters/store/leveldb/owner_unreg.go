@@ -8,7 +8,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func (l LevelAdapter) OwnerUnreg(owner string) (err error) {
+func (l LevelAdapter) OwnerUnReg(owner string) (err error) {
 	prefix := common.PrefixOwner + "-"
 	var keys = []string{}
 	iter := l.db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)
