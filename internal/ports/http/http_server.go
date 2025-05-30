@@ -83,7 +83,9 @@ func (h *HttpServer) Start() {
 	http.HandleFunc("POST /task/search", h.handle(SearchTask))
 	http.HandleFunc("POST /error/search", h.handle(SearchError))
 	http.HandleFunc("POST /task/search/delete", h.handle(SearchDeleteTask))
+	http.HandleFunc("POST /error/search/delete", h.handle(SearchDeleteErrorTask))
 	http.HandleFunc("POST /task/search/update", h.handle(SearchUpdateTask))
+	http.HandleFunc("POST /error/search/update", h.handle(SearchUpdateErrorTask))
 
 	nextRequestID := func() string {
 		return strconv.FormatInt(time.Now().UnixNano(), 10)

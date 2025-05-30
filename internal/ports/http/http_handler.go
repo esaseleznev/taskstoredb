@@ -175,6 +175,19 @@ func SearchDeleteTask(a app.Application, w http.ResponseWriter, r *http.Request)
 	return emptyBody(w)
 }
 
+func SearchDeleteErrorTask(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.SearchTaskRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	err = a.Commands.SearchDeleteErrorTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	if err != nil {
+		return err
+	}
+	return emptyBody(w)
+}
+
 func SearchUpdateTask(a app.Application, w http.ResponseWriter, r *http.Request) error {
 	o, err := decode[contract.SearchUpdateTaskRequest](r)
 	if err != nil {
@@ -182,6 +195,19 @@ func SearchUpdateTask(a app.Application, w http.ResponseWriter, r *http.Request)
 	}
 
 	err = a.Commands.SearchUpdateTask.Handle(o.Up, o.Condition, o.Kind, o.Size, o.Internal)
+	if err != nil {
+		return err
+	}
+	return emptyBody(w)
+}
+
+func SearchUpdateErrorTask(a app.Application, w http.ResponseWriter, r *http.Request) error {
+	o, err := decode[contract.SearchUpdateTaskRequest](r)
+	if err != nil {
+		return newBadRequestError(err)
+	}
+
+	err = a.Commands.SearchUpdateErrorTask.Handle(o.Up, o.Condition, o.Kind, o.Size, o.Internal)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,11 @@ import (
 )
 
 type SearchUpdateTaskDbAdapter interface {
-	SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
+	SearchTask(
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (tasks []contract.Task, err error)
 	Update(
 		id string,
 		status contract.Status,
@@ -21,7 +25,14 @@ type SearchUpdateTaskDbAdapter interface {
 }
 
 type SearchUpdateTaskClusterAdapter interface {
-	SearchUpdateTask(url string, up contract.TaskUpdate, condition *contract.Condition, kind *string, size *uint) (err error)
+	SearchUpdateTask(
+		url string,
+		up contract.TaskUpdate,
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (err error)
+
 	Add(
 		url string,
 		group string,
@@ -65,7 +76,13 @@ func NewSearchUpdateTaskHandler(
 	return SearchUpdateTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
 }
 
-func (h SearchUpdateTaskHandler) Handle(up contract.TaskUpdate, condition *contract.Condition, kind *string, size *uint, internal bool) (err error) {
+func (h SearchUpdateTaskHandler) Handle(
+	up contract.TaskUpdate,
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+	internal bool,
+) (err error) {
 	if condition != nil && len(condition.Operations) == 0 && len(condition.Operations) == 0 {
 		return errors.New("condition is empty")
 	}
@@ -90,7 +107,12 @@ func (h SearchUpdateTaskHandler) Handle(up contract.TaskUpdate, condition *contr
 	return nil
 }
 
-func (h SearchUpdateTaskHandler) internal(up contract.TaskUpdate, condition *contract.Condition, kind *string, size *uint) (err error) {
+func (h SearchUpdateTaskHandler) internal(
+	up contract.TaskUpdate,
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+) (err error) {
 	portion, err := h.db.SearchTask(condition, kind, size)
 	if err != nil {
 		return err

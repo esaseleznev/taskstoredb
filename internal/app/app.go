@@ -11,11 +11,13 @@ type Application struct {
 }
 
 type Commands struct {
-	AddTask          command.AddTaskHandler
-	UpdateTask       command.UpdateTaskHendler
-	OwnerReg         command.OwnerRegHandler
-	SearchDeleteTask command.SearchDeleteTaskHandler
-	SearchUpdateTask command.SearchUpdateTaskHandler
+	AddTask               command.AddTaskHandler
+	UpdateTask            command.UpdateTaskHendler
+	OwnerReg              command.OwnerRegHandler
+	SearchDeleteTask      command.SearchDeleteTaskHandler
+	SearchDeleteErrorTask command.SearchDeleteErrorTaskHandler
+	SearchUpdateTask      command.SearchUpdateTaskHandler
+	SearchUpdateErrorTask command.SearchUpdateErrorTaskHandler
 }
 
 type Queries struct {
