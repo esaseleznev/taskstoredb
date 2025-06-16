@@ -9,11 +9,7 @@ import (
 
 type SearchDeleteErrorTaskDbAdapter interface {
 	SearchErrorTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
-	UpdateError(
-		id string,
-		status contract.Status,
-		param map[string]string,
-	) (err error)
+	DeleteError(id string) (err error)
 }
 
 type SearchDeleteErrorTaskClusterAdapter interface {
@@ -85,7 +81,7 @@ func (h SearchDeleteErrorTaskHandler) internal(condition *contract.Condition, ki
 		return err
 	}
 	for _, task := range portion {
-		err = h.db.UpdateError(task.Id, contract.COMPLETED, task.Param)
+		err = h.db.DeleteError(task.Id)
 		if err != nil {
 			return err
 		}
