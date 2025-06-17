@@ -17,7 +17,10 @@ import (
 
 func main() {
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
-	config := config.NewConfig()
+	config, err := config.NewConfig(logger)
+	if err != nil {
+		logger.Fatalf("Could not create config %+v\n", err)
+	}
 	application := newApplication(config, logger)
 	httpServer := hport.NewHttpServer(config.Http.Port, application, logger)
 	httpServer.Start()
