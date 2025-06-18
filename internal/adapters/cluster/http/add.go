@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
@@ -28,7 +27,7 @@ func (a HttpClusterAdapter) Add(
 		return id, fmt.Errorf("request format error: %v", err)
 	}
 
-	resp, err := http.Post(url+"/task", "application/json", bytes.NewBuffer(json_data))
+	resp, err := a.client.Post(url+"/task", "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
 		return id, fmt.Errorf("request url %v error: %v", url, err)
 	}
@@ -40,7 +39,7 @@ func (a HttpClusterAdapter) Add(
 	}
 
 	var res contract.AddResponse
-	json.NewDecoder(resp.Body).Decode(&res)
+	err = json.NewDecoder(resp.Body).Decode(&res)
 	if err != nil {
 		return id, fmt.Errorf("response format error: %v", err)
 	}

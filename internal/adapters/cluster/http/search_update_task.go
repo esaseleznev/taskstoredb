@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
@@ -29,7 +28,7 @@ func (a HttpClusterAdapter) SearchUpdateTask(
 		return fmt.Errorf("request format error: %v", err)
 	}
 
-	resp, err := http.Post(url+"/task/search/update", "application/json", bytes.NewBuffer(json_data))
+	resp, err := a.client.Post(url+"/task/search/update", "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
 		return fmt.Errorf("request url %v error: %v", url, err)
 	}

@@ -10,7 +10,15 @@ import (
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
 
-type HttpClusterAdapter struct{}
+type HttpClusterAdapter struct {
+	client *http.Client
+}
+
+func NewHttpClusterAdapter(client *http.Client) HttpClusterAdapter {
+	return HttpClusterAdapter{
+		client: client,
+	}
+}
 
 func (a HttpClusterAdapter) isError(resp *http.Response) error {
 	if resp.StatusCode == 200 {

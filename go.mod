@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	github.com/serialx/hashring v0.0.0-20200727003509-22c0c7ab6b1b
+	github.com/justinrixx/retryhttp v1.0.1
 	github.com/syndtr/goleveldb v1.0.0
 	go.etcd.io/bbolt v1.3.11
 )

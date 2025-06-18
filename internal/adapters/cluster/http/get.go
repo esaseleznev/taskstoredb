@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
@@ -13,7 +12,7 @@ func (a HttpClusterAdapter) Get(
 	group string,
 	id string,
 ) (task *contract.Task, err error) {
-	resp, err := http.Get(url + "/task/" + id + "/group/" + group)
+	resp, err := a.client.Get(url + "/task/" + id + "/group/" + group)
 	if err != nil {
 		return task, fmt.Errorf("request url %v error: %v", url, err)
 	}
@@ -24,7 +23,7 @@ func (a HttpClusterAdapter) Get(
 		return task, fmt.Errorf("request url %v error: %v", url, err)
 	}
 
-	json.NewDecoder(resp.Body).Decode(task)
+	err = json.NewDecoder(resp.Body).Decode(task)
 	if err != nil {
 		return nil, fmt.Errorf("response format error: %v", err)
 	}

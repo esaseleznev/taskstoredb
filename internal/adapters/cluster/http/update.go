@@ -36,8 +36,7 @@ func (a HttpClusterAdapter) Update(
 		return fmt.Errorf("create request error: %v", err)
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request url %v error: %v", url, err)
 	}

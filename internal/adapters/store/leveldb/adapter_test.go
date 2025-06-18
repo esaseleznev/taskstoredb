@@ -157,6 +157,10 @@ func initLevelDb() (
 ) {
 	path = common.Tempfile("leveldb")
 	db, err = level.OpenFile(path, nil)
-	adapter = NewLevelAdapter(db)
+	if err != nil {
+		return "", nil, nil, err
+	}
+
+	adapter, err = NewLevelAdapter(db)
 	return path, db, adapter, err
 }

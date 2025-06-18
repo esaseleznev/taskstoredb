@@ -1,6 +1,8 @@
 package leveldb
 
 import (
+	"errors"
+
 	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	level "github.com/syndtr/goleveldb/leveldb"
 )
@@ -11,10 +13,10 @@ type LevelAdapter struct {
 	kinds map[string]*common.RoundRobin
 }
 
-func NewLevelAdapter(db *level.DB) *LevelAdapter {
+func NewLevelAdapter(db *level.DB) (*LevelAdapter, error) {
 	if db == nil {
-		panic("missing db")
+		return nil, errors.New("missing db")
 	}
 
-	return &LevelAdapter{db: db, kinds: make(map[string]*common.RoundRobin), tsid: common.NewTsid()}
+	return &LevelAdapter{db: db, kinds: make(map[string]*common.RoundRobin), tsid: common.NewTsid()}, nil
 }

@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"time"
 
 	cluster "github.com/esaseleznev/taskstoredb/internal/adapters/cluster/http"
 	store "github.com/esaseleznev/taskstoredb/internal/adapters/store/leveldb"
@@ -11,6 +13,7 @@ import (
 	"github.com/esaseleznev/taskstoredb/internal/app/query"
 	"github.com/esaseleznev/taskstoredb/internal/config"
 	hport "github.com/esaseleznev/taskstoredb/internal/ports/http"
+	"github.com/justinrixx/retryhttp"
 	"github.com/serialx/hashring"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -31,8 +34,26 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 	if err != nil {
 		logger.Fatalf("Could not open leveldb %+v\n", err)
 	}
-	db := store.NewLevelAdapter(level)
-	cluster := cluster.HttpClusterAdapter{}
+
+	db, err := store.NewLevelAdapter(level)
+	if err != nil {
+		logger.Fatalf("Could not create level adapter %+v\n", err)
+	}
+
+	httpClient := &http.Client{
+		Transport: retryhttp.New(
+			// optional retry configurations
+			retryhttp.WithShouldRetryFn(func(attempt retryhttp.Attempt) bool {
+				return attempt.Res != nil && attempt.Res.StatusCode == http.StatusServiceUnavailable
+			}),
+			retryhttp.WithDelayFn(func(attempt retryhttp.Attempt) time.Duration {
+				return time.Duration(attempt.Count*3) * time.Second
+			}),
+			retryhttp.WithMaxRetries(3),
+		),
+		// other HTTP client options
+	}
+	cluster := cluster.NewHttpClusterAdapter(httpClient)
 
 	servers := config.Cluster.Servers
 	ring := hashring.New(servers)
