@@ -8,30 +8,25 @@ import (
 
 	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
-	level "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func (l *LevelAdapter) Add(group string, kind string, owner *string, param map[string]string) (id string, err error) {
+func (l *LevelAdapter) Add(group string, kind string, owner *string, param map[string]string) (events []contract.Event, err error) {
 	task, id, keyGroup, err := l.newTask(group, kind, owner, param)
 	if err != nil {
-		return id, err
+		return events, err
 	}
 
 	taskBytes, err := json.Marshal(task)
 	if err != nil {
-		return id, fmt.Errorf("taskNew marshal error: %v", err)
+		return events, fmt.Errorf("taskNew marshal error: %v", err)
 	}
 
-	batch := new(level.Batch)
-	batch.Put([]byte(id), []byte(taskBytes))
-	batch.Put([]byte(keyGroup), []byte(id))
-	err = l.db.Write(batch, nil)
-	if err != nil {
-		return id, fmt.Errorf("could not set task in bucket 'task': %v", err)
-	}
+	payload := common.NewPlayload()
+	payload.Put([]byte(id), []byte(taskBytes))
+	payload.Put([]byte(keyGroup), []byte(id))
 
-	return id, err
+	return payload.Data(), err
 }
 
 func (l *LevelAdapter) newTask(group string, kind string, owner *string, param map[string]string) (task contract.Task, id string, keyGroup string, err error) {

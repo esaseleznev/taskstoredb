@@ -6,7 +6,6 @@ import (
 
 func (l LevelAdapter) Delete(
 	id string,
-) (err error) {
-	l.Update(id, contract.COMPLETED, nil, nil, nil)
-	return err
+) (events []contract.Event, err error) {
+	return l.Update(id, contract.COMPLETED, nil, nil, nil)
 }

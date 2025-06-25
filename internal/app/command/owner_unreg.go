@@ -3,11 +3,13 @@ package command
 import (
 	"errors"
 
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/serialx/hashring"
 )
 
 type OwnerUnRegDbAdapter interface {
-	OwnerUnReg(owner string) (err error)
+	OwnerUnReg(owner string) (events []contract.Event, err error)
+	Apply(events []contract.Event) (err error)
 }
 
 type OwnerUnRegClusterAdapter interface {
@@ -54,12 +56,20 @@ func (h OwnerUnRegHandler) Handle(owner string, internal bool) (err error) {
 	}
 
 	if internal {
-		return h.db.OwnerUnReg(owner)
+		events, err := h.db.OwnerUnReg(owner)
+		if err != nil {
+			return err
+		}
+		return h.db.Apply(events)
 	}
 
 	for _, node := range h.nodes {
 		if node == h.curUrl {
-			err = h.db.OwnerUnReg(owner)
+			events, err := h.db.OwnerUnReg(owner)
+			if err != nil {
+				return err
+			}
+			err = h.db.Apply(events)
 		} else {
 			err = h.cluster.OwnerUnReg(node, owner)
 		}

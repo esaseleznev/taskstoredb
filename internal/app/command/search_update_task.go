@@ -15,13 +15,18 @@ type SearchUpdateTaskDbAdapter interface {
 		kind *string,
 		size *uint,
 	) (tasks []contract.Task, err error)
+
 	Update(
 		id string,
 		status contract.Status,
 		param map[string]string,
 		error *string,
 		offset *string,
-	) (err error)
+	) (events []contract.Event, err error)
+
+	Delete(id string) (events []contract.Event, err error)
+
+	Apply(events []contract.Event) (err error)
 }
 
 type SearchUpdateTaskClusterAdapter interface {
@@ -142,7 +147,11 @@ func (h SearchUpdateTaskHandler) internal(
 		}
 
 		if !isNew {
-			err = h.db.Update(task.Id, task.Status, task.Param, task.Error, nil)
+			events, err := h.db.Update(task.Id, task.Status, task.Param, task.Error, nil)
+			if err != nil {
+				return err
+			}
+			err = h.db.Apply(events)
 			if err != nil {
 				return err
 			}
@@ -153,7 +162,11 @@ func (h SearchUpdateTaskHandler) internal(
 			if err != nil {
 				return err
 			}
-			err = h.db.Update(task.Id, contract.COMPLETED, task.Param, task.Error, nil)
+			events, err := h.db.Delete(task.Id)
+			if err != nil {
+				return err
+			}
+			err = h.db.Apply(events)
 			if err != nil {
 				return err
 			}

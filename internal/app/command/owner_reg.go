@@ -3,11 +3,13 @@ package command
 import (
 	"errors"
 
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/serialx/hashring"
 )
 
 type OwnerRegDbAdapter interface {
-	OwnerReg(owner string, kinds []string) (err error)
+	OwnerReg(owner string, kinds []string) (events []contract.Event)
+	Apply(events []contract.Event) (err error)
 }
 
 type OwnerRegClusterAdapter interface {
@@ -57,12 +59,15 @@ func (h OwnerRegHandler) Handle(owner string, kinds []string, internal bool) (er
 	}
 
 	if internal {
-		return h.db.OwnerReg(owner, kinds)
+		events := h.db.OwnerReg(owner, kinds)
+		return h.db.Apply(events)
+
 	}
 
 	for _, node := range h.nodes {
 		if node == h.curUrl {
-			err = h.db.OwnerReg(owner, kinds)
+			events := h.db.OwnerReg(owner, kinds)
+			err = h.db.Apply(events)
 		} else {
 			err = h.cluster.OwnerReg(node, owner, kinds)
 		}

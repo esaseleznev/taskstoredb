@@ -9,7 +9,8 @@ import (
 
 type SearchDeleteTaskDbAdapter interface {
 	SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
-	Delete(id string) (err error)
+	Delete(id string) (events []contract.Event, err error)
+	Apply(events []contract.Event) (err error)
 }
 
 type SearchDeleteTaskClusterAdapter interface {
@@ -81,7 +82,11 @@ func (h SearchDeleteTaskHandler) internal(condition *contract.Condition, kind *s
 		return err
 	}
 	for _, task := range portion {
-		err = h.db.Delete(task.Id)
+		events, err := h.db.Delete(task.Id)
+		if err != nil {
+			return err
+		}
+		err = h.db.Apply(events)
 		if err != nil {
 			return err
 		}

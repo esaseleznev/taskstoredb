@@ -8,7 +8,6 @@ import (
 
 	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
-	level "github.com/syndtr/goleveldb/leveldb"
 )
 
 func (l LevelAdapter) Update(
@@ -18,10 +17,10 @@ func (l LevelAdapter) Update(
 	error *string,
 	offset *string,
 
-) (err error) {
+) (events []contract.Event, err error) {
 	task, err := l.Get(id)
 	if err != nil {
-		return fmt.Errorf("get tast from db error: %v", err)
+		return nil, fmt.Errorf("get tast from db error: %v", err)
 	}
 	if task == nil {
 		return
@@ -30,16 +29,16 @@ func (l LevelAdapter) Update(
 	task.Param = param
 	task.Status = status
 
-	batch := new(level.Batch)
+	payload := common.NewPlayload()
 
 	switch status {
 	case contract.SCHEDULED:
 	case contract.VIRGIN:
 		taskBytes, err := json.Marshal(task)
 		if err != nil {
-			return fmt.Errorf("task marshal error: %v", err)
+			return nil, fmt.Errorf("task marshal error: %v", err)
 		}
-		batch.Put([]byte(id), taskBytes)
+		payload.Put([]byte(id), taskBytes)
 	case contract.FAILED:
 		taskError := contract.Task{
 			Id: strings.Replace(
@@ -57,37 +56,32 @@ func (l LevelAdapter) Update(
 
 		groupId, err := l.getGroupId(id, taskError.Group)
 		if err != nil {
-			return fmt.Errorf("taskError group parse error: %v", err)
+			return nil, fmt.Errorf("taskError group parse error: %v", err)
 		}
 		taskBytes, err := json.Marshal(taskError)
 		if err != nil {
-			return fmt.Errorf("taskError marshal error: %v", err)
+			return nil, fmt.Errorf("taskError marshal error: %v", err)
 		}
-		batch.Delete([]byte(groupId))
-		batch.Delete([]byte(id))
-		batch.Put([]byte(taskError.Id), taskBytes)
+		payload.Delete([]byte(groupId), nil)
+		payload.Delete([]byte(id), nil)
+		payload.Put([]byte(taskError.Id), taskBytes)
 	case contract.COMPLETED:
 		groupId, err := l.getGroupId(id, task.Group)
 		if err != nil {
-			return fmt.Errorf("taskError group parse error: %v", err)
+			return nil, fmt.Errorf("taskError group parse error: %v", err)
 		}
-		batch.Delete([]byte(groupId))
-		batch.Delete([]byte(id))
+		payload.Delete([]byte(groupId), nil)
+		payload.Delete([]byte(id), nil)
 	default:
-		return fmt.Errorf("unexpected status: %v", status)
+		return nil, fmt.Errorf("unexpected status: %v", status)
 	}
 
 	if offset != nil && task.Owner != nil {
 		keyOffset := fmt.Sprintf("%s-%s-%s", common.PrefixOffset, *task.Owner, task.Kind)
-		batch.Put([]byte(keyOffset), []byte(*offset))
+		payload.Put([]byte(keyOffset), []byte(*offset))
 	}
 
-	err = l.db.Write(batch, nil)
-	if err != nil {
-		return fmt.Errorf("could not update task in bucket 'task': %v", err)
-	}
-
-	return err
+	return payload.Data(), err
 }
 
 func (l LevelAdapter) getGroupId(id string, group string) (groupId string, err error) {

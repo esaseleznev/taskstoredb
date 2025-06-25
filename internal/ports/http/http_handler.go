@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/esaseleznev/taskstoredb/internal/app"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
@@ -16,6 +17,22 @@ func newBadRequestError(err error) HttpError {
 func emptyBody(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusOK)
 	return nil
+}
+
+func (h *HttpServer) HealthCheck() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if atomic.LoadInt32(&h.healthy) == 0 {
+			h.logger.Printf("Health check failed: %v", "server not healthy")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		if err := h.app.Commands.HealthCheck.Handle(); err != nil {
+			h.logger.Printf("Health check failed: %v", err)
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
 }
 
 func Add(a app.Application, w http.ResponseWriter, r *http.Request) error {

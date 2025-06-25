@@ -19,6 +19,7 @@ type Commands struct {
 	SearchDeleteErrorTask command.SearchDeleteErrorTaskHandler
 	SearchUpdateTask      command.SearchUpdateTaskHandler
 	SearchUpdateErrorTask command.SearchUpdateErrorTaskHandler
+	HealthCheck           command.HealthCheckHandler
 }
 
 type Queries struct {

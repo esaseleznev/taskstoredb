@@ -15,7 +15,8 @@ type UpdateTaskDbAdapter interface {
 		param map[string]string,
 		error *string,
 		offset *string,
-	) (err error)
+	) (events []contract.Event, err error)
+	Apply(events []contract.Event) (err error)
 }
 
 type UpdateTaskClusterAdapter interface {
@@ -85,7 +86,11 @@ func (h UpdateTaskHendler) Handle(
 		if status == contract.COMPLETED || status == contract.FAILED {
 			offset = &id
 		}
-		return h.db.Update(id, status, param, error, offset)
+		events, err := h.db.Update(id, status, param, error, offset)
+		if err != nil {
+			return err
+		}
+		return h.db.Apply(events)
 	} else {
 		return h.cluster.Update(node, group, id, status, param, error)
 	}

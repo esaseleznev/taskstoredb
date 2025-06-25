@@ -73,7 +73,7 @@ func NewHttpServer(port string, application app.Application, logger *log.Logger)
 }
 
 func (h *HttpServer) Start() {
-	http.HandleFunc("GET /healthz", h.HeathCheck())
+	http.HandleFunc("GET /healthz", h.HealthCheck())
 	http.HandleFunc("POST /task", h.handle(Add))
 	http.HandleFunc("PATCH /task", h.handle(Update))
 	http.HandleFunc("PUT /owner/reg", h.handle(OwnerReg))
@@ -131,16 +131,6 @@ func (h *HttpServer) Start() {
 
 func (h *HttpServer) setHealthy(val int32) {
 	atomic.StoreInt32(&h.healthy, val)
-}
-
-func (h *HttpServer) HeathCheck() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if atomic.LoadInt32(&h.healthy) == 1 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		w.WriteHeader(http.StatusServiceUnavailable)
-	}
 }
 
 func (h HttpServer) Tracing(nextReuestID func() string) func(http.Handler) http.Handler {

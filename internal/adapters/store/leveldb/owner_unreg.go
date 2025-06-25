@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
-	level "github.com/syndtr/goleveldb/leveldb"
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func (l LevelAdapter) OwnerUnReg(owner string) (err error) {
+func (l LevelAdapter) OwnerUnReg(owner string) (events []contract.Event, err error) {
 	prefix := common.PrefixOwner + "-"
 	var keys = []string{}
 	iter := l.db.NewIterator(util.BytesPrefix([]byte(prefix)), nil)
@@ -18,17 +18,13 @@ func (l LevelAdapter) OwnerUnReg(owner string) (err error) {
 	iter.Release()
 	err = iter.Error()
 	if err != nil {
-		return fmt.Errorf("could not get owner keys: %v", err)
+		return nil, fmt.Errorf("could not get owner keys: %v", err)
 	}
 
-	batch := new(level.Batch)
+	payload := common.NewPlayload()
 	for _, key := range keys {
-		batch.Delete([]byte(key))
-	}
-	err = l.db.Write(batch, nil)
-	if err != nil {
-		return fmt.Errorf("could not delete owner keys: %v", err)
+		payload.Delete([]byte(key), nil)
 	}
 
-	return err
+	return payload.Data(), err
 }

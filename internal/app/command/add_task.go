@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/serialx/hashring"
 )
 
@@ -13,7 +14,9 @@ type AddTaskDbAdapter interface {
 		kind string,
 		owner *string,
 		param map[string]string,
-	) (id string, err error)
+	) (events []contract.Event, err error)
+
+	Apply(events []contract.Event) (err error)
 }
 
 type AddTaskClusterAdapter interface {
@@ -74,7 +77,16 @@ func (h AddTaskHandler) Handle(
 	}
 
 	if node == h.curUrl {
-		return h.db.Add(group, kind, owner, param)
+		events, err := h.db.Add(group, kind, owner, param)
+		if err != nil {
+			return id, err
+		}
+		err = h.db.Apply(events)
+		if err != nil {
+			return id, err
+		}
+		id = string(events[0].Key)
+		return id, nil
 	} else {
 		return h.cluster.Add(node, group, kind, owner, param)
 	}

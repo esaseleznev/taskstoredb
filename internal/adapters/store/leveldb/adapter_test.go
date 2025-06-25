@@ -25,10 +25,17 @@ func TestLevelAdapter_Add(t *testing.T) {
 	_ = adapter.OwnerReg("103", []string{"TEST"})
 
 	for i := 1; i < 5; i++ {
-		id, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
+		p, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
+		err = adapter.Apply(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		id := string(p[0].Key)
+
 		_, err = db.Get([]byte(id), nil)
 		if err != nil {
 			t.Errorf("not correct add task")
@@ -48,23 +55,34 @@ func TestLevelAdapter_Pool(t *testing.T) {
 	_ = adapter.OwnerReg("100", []string{"TEST"})
 	var id string
 	for i := 1; i < 5; i++ {
-		id, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
+		p, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 		if err != nil {
 			t.Fatal(err)
 		}
+		err = adapter.Apply(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		id = string(p[0].Key)
 	}
 
 	for i := 1; i < 5; i++ {
-		_, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
+		p, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		adapter.Apply(p)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	err = adapter.Update(id, contract.SCHEDULED, map[string]string{"pid": groupIn, "status": "dead"}, nil, &id)
+	p, err := adapter.Update(id, contract.SCHEDULED, map[string]string{"pid": groupIn, "status": "dead"}, nil, &id)
 	if err != nil {
 		t.Fatal(err)
 	}
+	adapter.Apply(p)
 
 	tasks, err := adapter.Pool("100", "TEST", 5)
 	if err != nil {
@@ -99,12 +117,24 @@ func TestLevelAdapter_UpdateFailed(t *testing.T) {
 	groupIn := "12345"
 
 	_ = adapter.OwnerReg("100", []string{"TEST"})
-	id, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
+	p, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = adapter.Apply(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := string(p[0].Key)
+
 	errorTxt := "error test"
-	err = adapter.Update(id, contract.FAILED, map[string]string{"pid": groupIn, "status": "dead"}, &errorTxt, nil)
+	p, err = adapter.Update(id, contract.FAILED, map[string]string{"pid": groupIn, "status": "dead"}, &errorTxt, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = adapter.Apply(p)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -129,10 +159,17 @@ func TestLevelAdapter_GetFirstInGroup(t *testing.T) {
 
 	groupIn := "12345"
 
-	idIn, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
+	p, err := adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = adapter.Apply(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	idIn := string(p[0].Key)
 
 	_, err = adapter.Add(groupIn, "TEST", nil, map[string]string{"pid": groupIn, "status": "dead"})
 	if err != nil {

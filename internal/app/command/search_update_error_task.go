@@ -15,7 +15,8 @@ type SearchUpdateErrorTaskDbAdapter interface {
 		id string,
 		status contract.Status,
 		param map[string]string,
-	) (err error)
+	) (events []contract.Event, err error)
+	Apply(events []contract.Event) (err error)
 }
 
 type SearchUpdateErrorTaskClusterAdapter interface {
@@ -105,7 +106,11 @@ func (h SearchUpdateErrorTaskHandler) internal(
 			maps.Copy(task.Param, up.Param)
 		}
 
-		err = h.db.UpdateError(task.Id, task.Status, task.Param)
+		events, err := h.db.UpdateError(task.Id, task.Status, task.Param)
+		if err != nil {
+			return err
+		}
+		err = h.db.Apply(events)
 		if err != nil {
 			return err
 		}
