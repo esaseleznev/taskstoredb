@@ -2,15 +2,19 @@ package command
 
 import (
 	"errors"
-
 	"maps"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
 type SearchUpdateErrorTaskDbAdapter interface {
-	SearchErrorTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
+	SearchErrorTask(
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (tasks []contract.Task, err error)
 	UpdateError(
 		id string,
 		status contract.Status,
@@ -20,7 +24,13 @@ type SearchUpdateErrorTaskDbAdapter interface {
 }
 
 type SearchUpdateErrorTaskClusterAdapter interface {
-	SearchUpdateErrorTask(url string, up contract.TaskUpdate, condition *contract.Condition, kind *string, size *uint) (err error)
+	SearchUpdateErrorTask(
+		url string,
+		up contract.TaskUpdate,
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (err error)
 }
 
 type SearchUpdateErrorTaskHandler struct {
@@ -29,6 +39,7 @@ type SearchUpdateErrorTaskHandler struct {
 	ring    *hashring.HashRing
 	curUrl  string
 	nodes   []string
+	raft    *raft.Raft
 }
 
 func NewSearchUpdateErrorTaskHandler(
@@ -37,6 +48,7 @@ func NewSearchUpdateErrorTaskHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
+	raft *raft.Raft,
 ) SearchUpdateErrorTaskHandler {
 	if db == nil {
 		panic("nil SearchUpdateErrorTaskDbAdapter")
@@ -54,7 +66,14 @@ func NewSearchUpdateErrorTaskHandler(
 		panic("nodes is empty")
 	}
 
-	return SearchUpdateErrorTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return SearchUpdateErrorTaskHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+		raft:    raft,
+	}
 }
 
 func (h SearchUpdateErrorTaskHandler) Handle(
@@ -110,7 +129,7 @@ func (h SearchUpdateErrorTaskHandler) internal(
 		if err != nil {
 			return err
 		}
-		err = h.db.Apply(events)
+		err = raftApply(h.raft, h.db, events)
 		if err != nil {
 			return err
 		}

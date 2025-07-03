@@ -17,9 +17,17 @@ func (p *Playload) Data() []contract.Event {
 }
 
 func (p *Playload) Put(key []byte, value []byte) {
-	p.data = append(p.data, contract.Event{Key: key, Value: value, Type: contract.SetType})
+	p.data = append(p.data, contract.Event{
+		Key:   key,
+		Value: value,
+		Type:  contract.SetType,
+	})
 }
 
 func (p *Playload) Delete(key []byte, value []byte) {
-	p.data = append(p.data, contract.Event{Key: key, Value: value, Type: contract.DeleteType})
+	p.data = append(p.data, contract.Event{
+		Key:   key,
+		Value: value,
+		Type:  contract.DeleteType,
+	})
 }

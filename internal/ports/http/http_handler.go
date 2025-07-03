@@ -167,7 +167,12 @@ func SearchTask(a app.Application, w http.ResponseWriter, r *http.Request) error
 		return newBadRequestError(err)
 	}
 
-	tasks, err := a.Queries.SearchTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	tasks, err := a.Queries.SearchTask.Handle(
+		o.Condition,
+		o.Kind,
+		o.Size,
+		o.Internal,
+	)
 	if err != nil {
 		return err
 	}
@@ -183,7 +188,12 @@ func SearchError(a app.Application, w http.ResponseWriter, r *http.Request) erro
 		return newBadRequestError(err)
 	}
 
-	tasks, err := a.Queries.SearchError.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	tasks, err := a.Queries.SearchError.Handle(
+		o.Condition,
+		o.Kind,
+		o.Size,
+		o.Internal,
+	)
 	if err != nil {
 		return err
 	}
@@ -199,7 +209,12 @@ func SearchDeleteTask(a app.Application, w http.ResponseWriter, r *http.Request)
 		return newBadRequestError(err)
 	}
 
-	err = a.Commands.SearchDeleteTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	err = a.Commands.SearchDeleteTask.Handle(
+		o.Condition,
+		o.Kind,
+		o.Size,
+		o.Internal,
+	)
 	if err != nil {
 		return err
 	}
@@ -212,7 +227,12 @@ func SearchDeleteErrorTask(a app.Application, w http.ResponseWriter, r *http.Req
 		return newBadRequestError(err)
 	}
 
-	err = a.Commands.SearchDeleteErrorTask.Handle(o.Condition, o.Kind, o.Size, o.Internal)
+	err = a.Commands.SearchDeleteErrorTask.Handle(
+		o.Condition,
+		o.Kind,
+		o.Size,
+		o.Internal,
+	)
 	if err != nil {
 		return err
 	}
@@ -225,7 +245,13 @@ func SearchUpdateTask(a app.Application, w http.ResponseWriter, r *http.Request)
 		return newBadRequestError(err)
 	}
 
-	err = a.Commands.SearchUpdateTask.Handle(o.Up, o.Condition, o.Kind, o.Size, o.Internal)
+	err = a.Commands.SearchUpdateTask.Handle(
+		o.Up,
+		o.Condition,
+		o.Kind,
+		o.Size,
+		o.Internal,
+	)
 	if err != nil {
 		return err
 	}
@@ -238,7 +264,13 @@ func SearchUpdateErrorTask(a app.Application, w http.ResponseWriter, r *http.Req
 		return newBadRequestError(err)
 	}
 
-	err = a.Commands.SearchUpdateErrorTask.Handle(o.Up, o.Condition, o.Kind, o.Size, o.Internal)
+	err = a.Commands.SearchUpdateErrorTask.Handle(
+		o.Up,
+		o.Condition,
+		o.Kind,
+		o.Size,
+		o.Internal,
+	)
 	if err != nil {
 		return err
 	}

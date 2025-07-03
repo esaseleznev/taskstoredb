@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
@@ -22,6 +23,7 @@ type OwnerUnRegHandler struct {
 	ring    *hashring.HashRing
 	curUrl  string
 	nodes   []string
+	raft    *raft.Raft
 }
 
 func NewOwnerUnRegHandler(
@@ -30,6 +32,7 @@ func NewOwnerUnRegHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
+	raft *raft.Raft,
 ) OwnerUnRegHandler {
 	if db == nil {
 		panic("nil OwnerUnRegDbAdapter")
@@ -47,7 +50,14 @@ func NewOwnerUnRegHandler(
 		panic("nodes is empty")
 	}
 
-	return OwnerUnRegHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return OwnerUnRegHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+		raft:    raft,
+	}
 }
 
 func (h OwnerUnRegHandler) Handle(owner string, internal bool) (err error) {
@@ -60,7 +70,7 @@ func (h OwnerUnRegHandler) Handle(owner string, internal bool) (err error) {
 		if err != nil {
 			return err
 		}
-		return h.db.Apply(events)
+		return raftApply(h.raft, h.db, events)
 	}
 
 	for _, node := range h.nodes {
@@ -69,7 +79,7 @@ func (h OwnerUnRegHandler) Handle(owner string, internal bool) (err error) {
 			if err != nil {
 				return err
 			}
-			err = h.db.Apply(events)
+			err = raftApply(h.raft, h.db, events)
 		} else {
 			err = h.cluster.OwnerUnReg(node, owner)
 		}

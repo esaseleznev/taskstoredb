@@ -7,6 +7,10 @@ import (
 
 // for compatibility with Raft consensus algorithm
 func (l LevelAdapter) Apply(events []contract.Event) (err error) {
+	return ApplyDb(l.db, events)
+}
+
+func ApplyDb(db *level.DB, events []contract.Event) error {
 	batch := new(level.Batch)
 	for _, e := range events {
 		switch e.Type {
@@ -16,5 +20,5 @@ func (l LevelAdapter) Apply(events []contract.Event) (err error) {
 			batch.Delete(e.Key)
 		}
 	}
-	return l.db.Write(batch, nil)
+	return db.Write(batch, nil)
 }

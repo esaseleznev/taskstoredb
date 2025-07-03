@@ -4,17 +4,27 @@ import (
 	"errors"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
 type SearchDeleteTaskDbAdapter interface {
-	SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
+	SearchTask(
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (tasks []contract.Task, err error)
 	Delete(id string) (events []contract.Event, err error)
 	Apply(events []contract.Event) (err error)
 }
 
 type SearchDeleteTaskClusterAdapter interface {
-	SearchDeleteTask(url string, condition *contract.Condition, kind *string, size *uint) (err error)
+	SearchDeleteTask(
+		url string,
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (err error)
 }
 
 type SearchDeleteTaskHandler struct {
@@ -23,6 +33,7 @@ type SearchDeleteTaskHandler struct {
 	ring    *hashring.HashRing
 	curUrl  string
 	nodes   []string
+	raft    *raft.Raft
 }
 
 func NewSearchDeleteTaskHandler(
@@ -31,6 +42,7 @@ func NewSearchDeleteTaskHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
+	raft *raft.Raft,
 ) SearchDeleteTaskHandler {
 	if db == nil {
 		panic("nil SearchDeleteTaskDbAdapter")
@@ -48,10 +60,22 @@ func NewSearchDeleteTaskHandler(
 		panic("nodes is empty")
 	}
 
-	return SearchDeleteTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return SearchDeleteTaskHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+		raft:    raft,
+	}
 }
 
-func (h SearchDeleteTaskHandler) Handle(condition *contract.Condition, kind *string, size *uint, internal bool) (err error) {
+func (h SearchDeleteTaskHandler) Handle(
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+	internal bool,
+) (err error) {
 	if condition != nil && len(condition.Operations) == 0 && len(condition.Operations) == 0 {
 		return errors.New("condition is empty")
 	}
@@ -86,7 +110,7 @@ func (h SearchDeleteTaskHandler) internal(condition *contract.Condition, kind *s
 		if err != nil {
 			return err
 		}
-		err = h.db.Apply(events)
+		err = raftApply(h.raft, h.db, events)
 		if err != nil {
 			return err
 		}

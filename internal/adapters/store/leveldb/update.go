@@ -16,7 +16,6 @@ func (l LevelAdapter) Update(
 	param map[string]string,
 	error *string,
 	offset *string,
-
 ) (events []contract.Event, err error) {
 	task, err := l.Get(id)
 	if err != nil {

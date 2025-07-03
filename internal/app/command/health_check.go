@@ -2,7 +2,7 @@ package command
 
 import (
 	"github.com/esaseleznev/taskstoredb/internal/contract"
-	"github.com/serialx/hashring"
+	"github.com/hashicorp/raft"
 )
 
 type HealthCheckDbAdapter interface {
@@ -12,29 +12,18 @@ type HealthCheckDbAdapter interface {
 
 type HealthCheckHandler struct {
 	db   HealthCheckDbAdapter
-	ring *hashring.HashRing
+	raft *raft.Raft
 }
 
 func NewHealthCheckHandler(
 	db HealthCheckDbAdapter,
-	ring *hashring.HashRing,
-	url string,
-	nodes []string,
+	raft *raft.Raft,
 ) HealthCheckHandler {
 	if db == nil {
 		panic("nil HealthCheckDbAdapter")
 	}
-	if ring == nil {
-		panic("nil ring")
-	}
-	if url == "" {
-		panic("url is empty")
-	}
-	if len(nodes) == 0 {
-		panic("nodes is empty")
-	}
 
-	return HealthCheckHandler{db: db, ring: ring}
+	return HealthCheckHandler{db: db, raft: raft}
 }
 
 func (h HealthCheckHandler) Handle() (err error) {
@@ -42,5 +31,5 @@ func (h HealthCheckHandler) Handle() (err error) {
 	if err != nil {
 		return err
 	}
-	return h.db.Apply(events)
+	return raftApply(h.raft, h.db, events)
 }

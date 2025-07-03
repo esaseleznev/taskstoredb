@@ -13,7 +13,11 @@ type GetDbAdapter interface {
 }
 
 type GetClusterAdapter interface {
-	Get(url string, group string, id string) (tasks *contract.Task, err error)
+	Get(
+		url string,
+		group string,
+		id string,
+	) (tasks *contract.Task, err error)
 }
 
 type GetHandler struct {
@@ -45,7 +49,10 @@ func NewGetHandler(
 	return GetHandler{db: db, cluster: cluster, ring: ring, curUrl: url}
 }
 
-func (h GetHandler) Handle(group string, id string) (task *contract.Task, err error) {
+func (h GetHandler) Handle(
+	group string,
+	id string,
+) (task *contract.Task, err error) {
 	if group == "" {
 		return task, errors.New("group is empty")
 	}

@@ -18,5 +18,9 @@ func NewLevelAdapter(db *level.DB) (*LevelAdapter, error) {
 		return nil, errors.New("missing db")
 	}
 
-	return &LevelAdapter{db: db, kinds: make(map[string]*common.RoundRobin), tsid: common.NewTsid()}, nil
+	return &LevelAdapter{
+		db:    db,
+		kinds: make(map[string]*common.RoundRobin),
+		tsid:  common.NewTsid(),
+	}, nil
 }

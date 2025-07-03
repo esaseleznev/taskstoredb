@@ -41,7 +41,12 @@ func NewGetFirstInGroupHandler(
 		panic("url is empty")
 	}
 
-	return GetFirstInGroupHandler{db: db, cluster: cluster, ring: ring, curUrl: url}
+	return GetFirstInGroupHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+	}
 }
 
 func (h GetFirstInGroupHandler) Handle(group string) (id string, err error) {

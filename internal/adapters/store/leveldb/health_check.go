@@ -6,10 +6,9 @@ import (
 
 	common "github.com/esaseleznev/taskstoredb/internal/adapters/store/common"
 	"github.com/esaseleznev/taskstoredb/internal/contract"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
-func (l LevelAdapter) HealthCheck(db *leveldb.DB) (events []contract.Event, err error) {
+func (l LevelAdapter) HealthCheck() (events []contract.Event, err error) {
 	if l.db == nil {
 		return nil, fmt.Errorf("leveldb is not initialized")
 	}

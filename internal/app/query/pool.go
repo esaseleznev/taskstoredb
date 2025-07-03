@@ -13,11 +13,19 @@ const (
 )
 
 type PoolDbAdapter interface {
-	Pool(owner string, kind string, size uint) (tasks []contract.Task, err error)
+	Pool(
+		owner string,
+		kind string,
+		size uint,
+	) (tasks []contract.Task, err error)
 }
 
 type PoolClusterAdapter interface {
-	Pool(url string, owner string, kind string) (tasks []contract.Task, err error)
+	Pool(
+		url string,
+		owner string,
+		kind string,
+	) (tasks []contract.Task, err error)
 }
 
 type PoolHandler struct {
@@ -51,10 +59,20 @@ func NewPoolHandler(
 		panic("nodes is empty")
 	}
 
-	return PoolHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return PoolHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+	}
 }
 
-func (h PoolHandler) Handle(owner string, kind string, internal bool) (tasks []contract.Task, err error) {
+func (h PoolHandler) Handle(
+	owner string,
+	kind string,
+	internal bool,
+) (tasks []contract.Task, err error) {
 	if owner == "" {
 		return tasks, errors.New("owner is empty")
 	}

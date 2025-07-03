@@ -64,10 +64,10 @@ func NewErrorResult(err error) contract.ErrorResponse {
 	}
 }
 
-func NewHttpServer(port string, application app.Application, logger *log.Logger) HttpServer {
+func NewHttpServer(port string, app app.Application, logger *log.Logger) HttpServer {
 	return HttpServer{
 		port:   port,
-		app:    application,
+		app:    app,
 		logger: logger,
 	}
 }
@@ -155,7 +155,13 @@ func (h HttpServer) Logging(logger *log.Logger) func(http.Handler) http.Handler 
 				if !ok {
 					requestID = "unknown"
 				}
-				logger.Println(requestID, r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+				logger.Println(
+					requestID,
+					r.Method,
+					r.URL.Path,
+					r.RemoteAddr,
+					r.UserAgent(),
+				)
 			}()
 			next.ServeHTTP(w, r)
 		})

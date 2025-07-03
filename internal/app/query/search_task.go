@@ -8,11 +8,20 @@ import (
 )
 
 type SearchTaskDbAdapter interface {
-	SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
+	SearchTask(
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (tasks []contract.Task, err error)
 }
 
 type SearchTaskClusterAdapter interface {
-	SearchTask(url string, condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
+	SearchTask(
+		url string,
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (tasks []contract.Task, err error)
 }
 
 type SearchTaskHandler struct {
@@ -46,10 +55,21 @@ func NewSearchTaskHandler(
 		panic("nodes is empty")
 	}
 
-	return SearchTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return SearchTaskHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+	}
 }
 
-func (h SearchTaskHandler) Handle(condition *contract.Condition, kind *string, size *uint, internal bool) (tasks []contract.Task, err error) {
+func (h SearchTaskHandler) Handle(
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+	internal bool,
+) (tasks []contract.Task, err error) {
 	if condition != nil && len(condition.Operations) == 0 && len(condition.Operations) == 0 {
 		return tasks, errors.New("condition is empty")
 	}

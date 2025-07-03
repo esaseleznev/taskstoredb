@@ -7,7 +7,10 @@ import (
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 )
 
-func (l LevelAdapter) OwnerReg(owner string, kinds []string) (events []contract.Event) {
+func (l LevelAdapter) OwnerReg(
+	owner string,
+	kinds []string,
+) (events []contract.Event) {
 	payload := common.NewPlayload()
 	for _, itr := range kinds {
 		keyOwner := fmt.Sprintf("%s-%s-%s", common.PrefixOwner, itr, owner)

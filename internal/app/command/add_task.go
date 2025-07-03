@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
@@ -34,6 +35,7 @@ type AddTaskHandler struct {
 	cluster AddTaskClusterAdapter
 	ring    *hashring.HashRing
 	curUrl  string
+	raft    *raft.Raft
 }
 
 func NewAddTaskHandler(
@@ -41,6 +43,7 @@ func NewAddTaskHandler(
 	cluster AddTaskClusterAdapter,
 	ring *hashring.HashRing,
 	url string,
+	raft *raft.Raft,
 ) AddTaskHandler {
 	if db == nil {
 		panic("nil addTaskDbAdapter")
@@ -55,7 +58,13 @@ func NewAddTaskHandler(
 		panic("url is empty")
 	}
 
-	return AddTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url}
+	return AddTaskHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		raft:    raft,
+	}
 }
 
 func (h AddTaskHandler) Handle(
@@ -81,7 +90,7 @@ func (h AddTaskHandler) Handle(
 		if err != nil {
 			return id, err
 		}
-		err = h.db.Apply(events)
+		err = raftApply(h.raft, h.db, events)
 		if err != nil {
 			return id, err
 		}

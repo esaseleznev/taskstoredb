@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
@@ -35,6 +36,7 @@ type UpdateTaskHendler struct {
 	cluster UpdateTaskClusterAdapter
 	ring    *hashring.HashRing
 	curUrl  string
+	raft    *raft.Raft
 }
 
 func NewUpdateTaskHendler(
@@ -42,6 +44,7 @@ func NewUpdateTaskHendler(
 	cluster UpdateTaskClusterAdapter,
 	ring *hashring.HashRing,
 	url string,
+	raft *raft.Raft,
 ) UpdateTaskHendler {
 	if db == nil {
 		panic("nil updateTaskAdapter")
@@ -56,7 +59,13 @@ func NewUpdateTaskHendler(
 		panic("url is empty")
 	}
 
-	return UpdateTaskHendler{db: db, cluster: cluster, ring: ring, curUrl: url}
+	return UpdateTaskHendler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		raft:    raft,
+	}
 }
 
 func (h UpdateTaskHendler) Handle(
@@ -90,7 +99,7 @@ func (h UpdateTaskHendler) Handle(
 		if err != nil {
 			return err
 		}
-		return h.db.Apply(events)
+		return raftApply(h.raft, h.db, events)
 	} else {
 		return h.cluster.Update(node, group, id, status, param, error)
 	}

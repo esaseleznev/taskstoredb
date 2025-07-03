@@ -9,7 +9,11 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func (l LevelAdapter) SearchTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error) {
+func (l LevelAdapter) SearchTask(
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+) (tasks []contract.Task, err error) {
 	return l.searchTask(condition, common.PrefixTask, kind, size)
 }
 

@@ -11,7 +11,12 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func (l *LevelAdapter) Add(group string, kind string, owner *string, param map[string]string) (events []contract.Event, err error) {
+func (l *LevelAdapter) Add(
+	group string,
+	kind string,
+	owner *string,
+	param map[string]string,
+) (events []contract.Event, err error) {
 	task, id, keyGroup, err := l.newTask(group, kind, owner, param)
 	if err != nil {
 		return events, err
@@ -29,7 +34,12 @@ func (l *LevelAdapter) Add(group string, kind string, owner *string, param map[s
 	return payload.Data(), err
 }
 
-func (l *LevelAdapter) newTask(group string, kind string, owner *string, param map[string]string) (task contract.Task, id string, keyGroup string, err error) {
+func (l *LevelAdapter) newTask(
+	group string,
+	kind string,
+	owner *string,
+	param map[string]string,
+) (task contract.Task, id string, keyGroup string, err error) {
 	rr, ok := l.kinds[kind]
 	if !ok {
 		owners, err := l.getOwnersKind(kind)

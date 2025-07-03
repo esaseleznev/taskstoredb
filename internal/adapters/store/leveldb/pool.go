@@ -10,7 +10,11 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
-func (l LevelAdapter) Pool(owner string, kind string, size uint) (tasks []contract.Task, err error) {
+func (l LevelAdapter) Pool(
+	owner string,
+	kind string,
+	size uint,
+) (tasks []contract.Task, err error) {
 	tasks = make([]contract.Task, 0)
 	prefix := common.PrefixTask + "-" + kind + "-"
 	r := util.BytesPrefix([]byte(prefix))

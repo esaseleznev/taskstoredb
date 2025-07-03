@@ -4,17 +4,27 @@ import (
 	"errors"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
 type SearchDeleteErrorTaskDbAdapter interface {
-	SearchErrorTask(condition *contract.Condition, kind *string, size *uint) (tasks []contract.Task, err error)
+	SearchErrorTask(
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (tasks []contract.Task, err error)
 	DeleteError(id string) (events []contract.Event, err error)
 	Apply(events []contract.Event) (err error)
 }
 
 type SearchDeleteErrorTaskClusterAdapter interface {
-	SearchDeleteErrorTask(url string, condition *contract.Condition, kind *string, size *uint) (err error)
+	SearchDeleteErrorTask(
+		url string,
+		condition *contract.Condition,
+		kind *string,
+		size *uint,
+	) (err error)
 }
 
 type SearchDeleteErrorTaskHandler struct {
@@ -23,6 +33,7 @@ type SearchDeleteErrorTaskHandler struct {
 	ring    *hashring.HashRing
 	curUrl  string
 	nodes   []string
+	raft    *raft.Raft
 }
 
 func NewSearchDeleteErrorTaskHandler(
@@ -31,6 +42,7 @@ func NewSearchDeleteErrorTaskHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
+	raft *raft.Raft,
 ) SearchDeleteErrorTaskHandler {
 	if db == nil {
 		panic("nil SearchDeleteErrorTaskDbAdapter")
@@ -48,10 +60,22 @@ func NewSearchDeleteErrorTaskHandler(
 		panic("nodes is empty")
 	}
 
-	return SearchDeleteErrorTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return SearchDeleteErrorTaskHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+		raft:    raft,
+	}
 }
 
-func (h SearchDeleteErrorTaskHandler) Handle(condition *contract.Condition, kind *string, size *uint, internal bool) (err error) {
+func (h SearchDeleteErrorTaskHandler) Handle(
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+	internal bool,
+) (err error) {
 	if condition != nil && len(condition.Operations) == 0 && len(condition.Operations) == 0 {
 		return errors.New("condition is empty")
 	}
@@ -76,7 +100,11 @@ func (h SearchDeleteErrorTaskHandler) Handle(condition *contract.Condition, kind
 	return nil
 }
 
-func (h SearchDeleteErrorTaskHandler) internal(condition *contract.Condition, kind *string, size *uint) (err error) {
+func (h SearchDeleteErrorTaskHandler) internal(
+	condition *contract.Condition,
+	kind *string,
+	size *uint,
+) (err error) {
 	portion, err := h.db.SearchErrorTask(condition, kind, size)
 	if err != nil {
 		return err
@@ -86,7 +114,7 @@ func (h SearchDeleteErrorTaskHandler) internal(condition *contract.Condition, ki
 		if err != nil {
 			return err
 		}
-		err = h.db.Apply(events)
+		err = raftApply(h.raft, h.db, events)
 		if err != nil {
 			return err
 		}

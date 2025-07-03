@@ -2,10 +2,10 @@ package command
 
 import (
 	"errors"
-
 	"maps"
 
 	"github.com/esaseleznev/taskstoredb/internal/contract"
+	"github.com/hashicorp/raft"
 	"github.com/serialx/hashring"
 )
 
@@ -53,6 +53,7 @@ type SearchUpdateTaskHandler struct {
 	ring    *hashring.HashRing
 	curUrl  string
 	nodes   []string
+	raft    *raft.Raft
 }
 
 func NewSearchUpdateTaskHandler(
@@ -61,6 +62,7 @@ func NewSearchUpdateTaskHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
+	raft *raft.Raft,
 ) SearchUpdateTaskHandler {
 	if db == nil {
 		panic("nil SearchUpdateTaskDbAdapter")
@@ -78,7 +80,14 @@ func NewSearchUpdateTaskHandler(
 		panic("nodes is empty")
 	}
 
-	return SearchUpdateTaskHandler{db: db, cluster: cluster, ring: ring, curUrl: url, nodes: nodes}
+	return SearchUpdateTaskHandler{
+		db:      db,
+		cluster: cluster,
+		ring:    ring,
+		curUrl:  url,
+		nodes:   nodes,
+		raft:    raft,
+	}
 }
 
 func (h SearchUpdateTaskHandler) Handle(
@@ -151,7 +160,7 @@ func (h SearchUpdateTaskHandler) internal(
 			if err != nil {
 				return err
 			}
-			err = h.db.Apply(events)
+			err = raftApply(h.raft, h.db, events)
 			if err != nil {
 				return err
 			}
@@ -166,7 +175,7 @@ func (h SearchUpdateTaskHandler) internal(
 			if err != nil {
 				return err
 			}
-			err = h.db.Apply(events)
+			err = raftApply(h.raft, h.db, events)
 			if err != nil {
 				return err
 			}
