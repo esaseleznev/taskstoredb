@@ -27,18 +27,18 @@ func NewGetFirstInGroupHandler(
 	cluster GetFirstInGroupClusterAdapter,
 	ring *hashring.HashRing,
 	url string,
-) GetFirstInGroupHandler {
+) (h GetFirstInGroupHandler, err error) {
 	if db == nil {
-		panic("nil GetFirstInGroupDbAdapter")
+		return h, errors.New("nil GetFirstInGroupDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil GetFirstInGroupClusterAdapter")
+		return h, errors.New("nil GetFirstInGroupClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 
 	return GetFirstInGroupHandler{
@@ -46,7 +46,7 @@ func NewGetFirstInGroupHandler(
 		cluster: cluster,
 		ring:    ring,
 		curUrl:  url,
-	}
+	}, nil
 }
 
 func (h GetFirstInGroupHandler) Handle(group string) (id string, err error) {

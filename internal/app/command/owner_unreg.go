@@ -33,21 +33,21 @@ func NewOwnerUnRegHandler(
 	url string,
 	nodes []string,
 	raft *raft.Raft,
-) OwnerUnRegHandler {
+) (OwnerUnRegHandler, error) {
 	if db == nil {
-		panic("nil OwnerUnRegDbAdapter")
+		return OwnerUnRegHandler{}, errors.New("nil OwnerUnRegDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil OwnerUnRegClusterAdapter")
+		return OwnerUnRegHandler{}, errors.New("nil OwnerUnRegClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return OwnerUnRegHandler{}, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return OwnerUnRegHandler{}, errors.New("url is empty")
 	}
 	if len(nodes) == 0 {
-		panic("nodes is empty")
+		return OwnerUnRegHandler{}, errors.New("nodes is empty")
 	}
 
 	return OwnerUnRegHandler{
@@ -57,7 +57,7 @@ func NewOwnerUnRegHandler(
 		curUrl:  url,
 		nodes:   nodes,
 		raft:    raft,
-	}
+	}, nil
 }
 
 func (h OwnerUnRegHandler) Handle(owner string, internal bool) (err error) {

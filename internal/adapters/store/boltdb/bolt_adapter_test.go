@@ -113,8 +113,14 @@ func TestBoltAdapter_GetFirstInGroup(t *testing.T) {
 }
 
 func initBoltDb() (path string, db *bbolt.DB, adapter *BoltAdapter, err error) {
-	path = common.Tempfile("bolt")
+	path, err = common.Tempfile("bolt")
+	if err != nil {
+		return path, db, adapter, err
+	}
 	db, err = bbolt.Open(path, 0o600, nil)
-	adapter = NewBoltAdapter(db)
+	if err != nil {
+		return path, db, adapter, err
+	}
+	adapter, err = NewBoltAdapter(db)
 	return path, db, adapter, err
 }

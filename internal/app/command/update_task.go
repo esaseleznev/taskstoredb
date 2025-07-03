@@ -31,7 +31,7 @@ type UpdateTaskClusterAdapter interface {
 	) (err error)
 }
 
-type UpdateTaskHendler struct {
+type UpdateTaskHandler struct {
 	db      UpdateTaskDbAdapter
 	cluster UpdateTaskClusterAdapter
 	ring    *hashring.HashRing
@@ -39,36 +39,36 @@ type UpdateTaskHendler struct {
 	raft    *raft.Raft
 }
 
-func NewUpdateTaskHendler(
+func NewUpdateTaskHandler(
 	db UpdateTaskDbAdapter,
 	cluster UpdateTaskClusterAdapter,
 	ring *hashring.HashRing,
 	url string,
 	raft *raft.Raft,
-) UpdateTaskHendler {
+) (h UpdateTaskHandler, err error) {
 	if db == nil {
-		panic("nil updateTaskAdapter")
+		return h, errors.New("nil updateTaskAdapter")
 	}
 	if cluster == nil {
-		panic("nil updateTaskClusterAdapter")
+		return h, errors.New("nil updateTaskClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 
-	return UpdateTaskHendler{
+	return UpdateTaskHandler{
 		db:      db,
 		cluster: cluster,
 		ring:    ring,
 		curUrl:  url,
 		raft:    raft,
-	}
+	}, nil
 }
 
-func (h UpdateTaskHendler) Handle(
+func (h UpdateTaskHandler) Handle(
 	group string,
 	id string,
 	status contract.Status,

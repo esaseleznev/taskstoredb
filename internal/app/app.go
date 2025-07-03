@@ -12,7 +12,7 @@ type Application struct {
 
 type Commands struct {
 	AddTask               command.AddTaskHandler
-	UpdateTask            command.UpdateTaskHendler
+	UpdateTask            command.UpdateTaskHandler
 	OwnerReg              command.OwnerRegHandler
 	OwnerUnReg            command.OwnerUnRegHandler
 	SearchDeleteTask      command.SearchDeleteTaskHandler

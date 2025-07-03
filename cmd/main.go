@@ -68,24 +68,94 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 		logger.Fatalf("failed to create raft: %v", err)
 	}
 
+	addTask, err := command.NewAddTaskHandler(db, cluster, ring, config.Cluster.Current, raft)
+	if err != nil {
+		logger.Fatalf("failed to create add task handler: %v", err)
+	}
+
+	updateTask, err := command.NewUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, raft)
+	if err != nil {
+		logger.Fatalf("failed to create update task handler: %v", err)
+	}
+
+	ownerReg, err := command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
+	if err != nil {
+		logger.Fatalf("failed to create owner registration handler: %v", err)
+	}
+
+	ownerUnReg, err := command.NewOwnerUnRegHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
+	if err != nil {
+		logger.Fatalf("failed to create owner unregistration handler: %v", err)
+	}
+
+	searchDeleteTask, err := command.NewSearchDeleteTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
+	if err != nil {
+		logger.Fatalf("failed to create search delete task handler: %v", err)
+	}
+
+	searchDeleteErrorTask, err := command.NewSearchDeleteErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
+	if err != nil {
+		logger.Fatalf("failed to create search delete error task handler: %v", err)
+	}
+
+	searchUpdateTask, err := command.NewSearchUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
+	if err != nil {
+		logger.Fatalf("failed to create search update task handler: %v", err)
+	}
+
+	searchUpdateErrorTask, err := command.NewSearchUpdateErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
+	if err != nil {
+		logger.Fatalf("failed to create search update error task handler: %v", err)
+	}
+
+	healthCheck, err := command.NewHealthCheckHandler(db, raft)
+	if err != nil {
+		logger.Fatalf("failed to create health check handler: %v", err)
+	}
+
+	getFirstInGroup, err := query.NewGetFirstInGroupHandler(db, cluster, ring, config.Cluster.Current)
+	if err != nil {
+		logger.Fatalf("failed to create get first in group handler: %v", err)
+	}
+
+	pool, err := query.NewPoolHandler(db, cluster, ring, config.Cluster.Current, servers)
+	if err != nil {
+		logger.Fatalf("failed to create pool handler: %v", err)
+	}
+
+	get, err := query.NewGetHandler(db, cluster, ring, config.Cluster.Current)
+	if err != nil {
+		logger.Fatalf("failed to create get handler: %v", err)
+	}
+
+	searchTask, err := query.NewSearchTaskHandler(db, cluster, ring, config.Cluster.Current, servers)
+	if err != nil {
+		logger.Fatalf("failed to create search task handler: %v", err)
+	}
+
+	searchError, err := query.NewSearchErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers)
+	if err != nil {
+		logger.Fatalf("failed to create search error task handler: %v", err)
+	}
+
 	return app.Application{
 		Commands: app.Commands{
-			AddTask:               command.NewAddTaskHandler(db, cluster, ring, config.Cluster.Current, raft),
-			UpdateTask:            command.NewUpdateTaskHendler(db, cluster, ring, config.Cluster.Current, raft),
-			OwnerReg:              command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers, raft),
-			OwnerUnReg:            command.NewOwnerUnRegHandler(db, cluster, ring, config.Cluster.Current, servers, raft),
-			SearchDeleteTask:      command.NewSearchDeleteTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft),
-			SearchDeleteErrorTask: command.NewSearchDeleteErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft),
-			SearchUpdateTask:      command.NewSearchUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft),
-			SearchUpdateErrorTask: command.NewSearchUpdateErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft),
-			HealthCheck:           command.NewHealthCheckHandler(db, raft),
+			AddTask:               addTask,
+			UpdateTask:            updateTask,
+			OwnerReg:              ownerReg,
+			OwnerUnReg:            ownerUnReg,
+			SearchDeleteTask:      searchDeleteTask,
+			SearchDeleteErrorTask: searchDeleteErrorTask,
+			SearchUpdateTask:      searchUpdateTask,
+			SearchUpdateErrorTask: searchUpdateErrorTask,
+			HealthCheck:           healthCheck,
 		},
 		Queries: app.Queries{
-			GetFirstInGroup: query.NewGetFirstInGroupHandler(db, cluster, ring, config.Cluster.Current),
-			Pool:            query.NewPoolHandler(db, cluster, ring, config.Cluster.Current, servers),
-			Get:             query.NewGetHandler(db, cluster, ring, config.Cluster.Current),
-			SearchTask:      query.NewSearchTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
-			SearchError:     query.NewSearchErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers),
+			GetFirstInGroup: getFirstInGroup,
+			Get:             get,
+			Pool:            pool,
+			SearchTask:      searchTask,
+			SearchError:     searchError,
 		},
 	}
 }

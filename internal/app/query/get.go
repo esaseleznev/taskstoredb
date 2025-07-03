@@ -32,21 +32,21 @@ func NewGetHandler(
 	cluster GetClusterAdapter,
 	ring *hashring.HashRing,
 	url string,
-) GetHandler {
+) (h GetHandler, err error) {
 	if db == nil {
-		panic("nil GetDbAdapter")
+		return h, errors.New("nil GetDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil GetClusterAdapter")
+		return h, errors.New("nil GetClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 
-	return GetHandler{db: db, cluster: cluster, ring: ring, curUrl: url}
+	return GetHandler{db: db, cluster: cluster, ring: ring, curUrl: url}, nil
 }
 
 func (h GetHandler) Handle(

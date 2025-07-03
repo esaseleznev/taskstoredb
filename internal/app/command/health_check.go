@@ -1,6 +1,8 @@
 package command
 
 import (
+	"errors"
+
 	"github.com/esaseleznev/taskstoredb/internal/contract"
 	"github.com/hashicorp/raft"
 )
@@ -18,12 +20,12 @@ type HealthCheckHandler struct {
 func NewHealthCheckHandler(
 	db HealthCheckDbAdapter,
 	raft *raft.Raft,
-) HealthCheckHandler {
+) (h HealthCheckHandler, err error) {
 	if db == nil {
-		panic("nil HealthCheckDbAdapter")
+		return h, errors.New("nil HealthCheckDbAdapter")
 	}
 
-	return HealthCheckHandler{db: db, raft: raft}
+	return HealthCheckHandler{db: db, raft: raft}, nil
 }
 
 func (h HealthCheckHandler) Handle() (err error) {

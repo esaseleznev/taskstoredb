@@ -18,12 +18,12 @@ type BoltAdapter struct {
 	kinds map[string]*common.RoundRobin
 }
 
-func NewBoltAdapter(db *bolt.DB) *BoltAdapter {
+func NewBoltAdapter(db *bolt.DB) (*BoltAdapter, error) {
 	if db == nil {
-		panic("missing db")
+		return nil, fmt.Errorf("missing db")
 	}
 
-	return &BoltAdapter{db: db, kinds: make(map[string]*common.RoundRobin)}
+	return &BoltAdapter{db: db, kinds: make(map[string]*common.RoundRobin)}, nil
 }
 
 func (b BoltAdapter) GetFirstInGroup(group string) (id string, err error) {

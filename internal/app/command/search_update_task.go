@@ -63,21 +63,21 @@ func NewSearchUpdateTaskHandler(
 	url string,
 	nodes []string,
 	raft *raft.Raft,
-) SearchUpdateTaskHandler {
+) (h SearchUpdateTaskHandler, err error) {
 	if db == nil {
-		panic("nil SearchUpdateTaskDbAdapter")
+		return h, errors.New("nil SearchUpdateTaskDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil SearchUpdateTaskClusterAdapter")
+		return h, errors.New("nil SearchUpdateTaskClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 	if len(nodes) == 0 {
-		panic("nodes is empty")
+		return h, errors.New("nodes is empty")
 	}
 
 	return SearchUpdateTaskHandler{
@@ -87,7 +87,7 @@ func NewSearchUpdateTaskHandler(
 		curUrl:  url,
 		nodes:   nodes,
 		raft:    raft,
-	}
+	}, nil
 }
 
 func (h SearchUpdateTaskHandler) Handle(

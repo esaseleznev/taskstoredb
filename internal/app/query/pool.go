@@ -42,21 +42,21 @@ func NewPoolHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
-) PoolHandler {
+) (h PoolHandler, err error) {
 	if db == nil {
-		panic("nil poolDbAdapter")
+		return h, errors.New("nil poolDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil poolClusterAdapter")
+		return h, errors.New("nil poolClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 	if len(nodes) == 0 {
-		panic("nodes is empty")
+		return h, errors.New("nodes is empty")
 	}
 
 	return PoolHandler{
@@ -65,7 +65,7 @@ func NewPoolHandler(
 		ring:    ring,
 		curUrl:  url,
 		nodes:   nodes,
-	}
+	}, nil
 }
 
 func (h PoolHandler) Handle(

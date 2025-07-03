@@ -43,21 +43,21 @@ func NewSearchDeleteErrorTaskHandler(
 	url string,
 	nodes []string,
 	raft *raft.Raft,
-) SearchDeleteErrorTaskHandler {
+) (h SearchDeleteErrorTaskHandler, err error) {
 	if db == nil {
-		panic("nil SearchDeleteErrorTaskDbAdapter")
+		return h, errors.New("nil SearchDeleteErrorTaskDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil SearchDeleteErrorTaskClusterAdapter")
+		return h, errors.New("nil SearchDeleteErrorTaskClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 	if len(nodes) == 0 {
-		panic("nodes is empty")
+		return h, errors.New("nodes is empty")
 	}
 
 	return SearchDeleteErrorTaskHandler{
@@ -67,7 +67,7 @@ func NewSearchDeleteErrorTaskHandler(
 		curUrl:  url,
 		nodes:   nodes,
 		raft:    raft,
-	}
+	}, nil
 }
 
 func (h SearchDeleteErrorTaskHandler) Handle(

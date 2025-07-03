@@ -3,16 +3,16 @@ package common
 import "os"
 
 // tempfile returns a temporary file path.
-func Tempfile(name string) string {
+func Tempfile(name string) (string, error) {
 	f, err := os.CreateTemp("", name+"-")
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	if err := f.Close(); err != nil {
-		panic(err)
+		return "", err
 	}
 	if err := os.Remove(f.Name()); err != nil {
-		panic(err)
+		return "", err
 	}
-	return f.Name()
+	return f.Name(), nil
 }

@@ -44,18 +44,18 @@ func NewAddTaskHandler(
 	ring *hashring.HashRing,
 	url string,
 	raft *raft.Raft,
-) AddTaskHandler {
+) (h AddTaskHandler, err error) {
 	if db == nil {
-		panic("nil addTaskDbAdapter")
+		return h, errors.New("nil AddTaskDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil AddTaskClusterAdapter")
+		return h, errors.New("nil AddTaskClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 
 	return AddTaskHandler{
@@ -64,7 +64,7 @@ func NewAddTaskHandler(
 		ring:    ring,
 		curUrl:  url,
 		raft:    raft,
-	}
+	}, nil
 }
 
 func (h AddTaskHandler) Handle(

@@ -38,21 +38,21 @@ func NewSearchErrorTaskHandler(
 	ring *hashring.HashRing,
 	url string,
 	nodes []string,
-) SearchErrorTaskHandler {
+) (h SearchErrorTaskHandler, err error) {
 	if db == nil {
-		panic("nil SearchErrorTaskDbAdapter")
+		return h, errors.New("nil SearchErrorTaskDbAdapter")
 	}
 	if cluster == nil {
-		panic("nil SearchErrorTaskClusterAdapter")
+		return h, errors.New("nil SearchErrorTaskClusterAdapter")
 	}
 	if ring == nil {
-		panic("nil ring")
+		return h, errors.New("nil ring")
 	}
 	if url == "" {
-		panic("url is empty")
+		return h, errors.New("url is empty")
 	}
 	if len(nodes) == 0 {
-		panic("nodes is empty")
+		return h, errors.New("nodes is empty")
 	}
 
 	return SearchErrorTaskHandler{
@@ -61,7 +61,7 @@ func NewSearchErrorTaskHandler(
 		ring:    ring,
 		curUrl:  url,
 		nodes:   nodes,
-	}
+	}, nil
 }
 
 func (h SearchErrorTaskHandler) Handle(
