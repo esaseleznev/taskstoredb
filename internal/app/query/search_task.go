@@ -70,7 +70,7 @@ func (h SearchTaskHandler) Handle(
 	size *uint,
 	internal bool,
 ) (tasks []contract.Task, err error) {
-	if condition != nil && len(condition.Operations) == 0 && len(condition.Operations) == 0 {
+	if condition != nil && len(condition.Operations) == 0 && len(condition.Conditions) == 0 {
 		return tasks, errors.New("condition is empty")
 	}
 

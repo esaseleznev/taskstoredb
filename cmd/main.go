@@ -27,22 +27,31 @@ func main() {
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	config, err := config.NewConfig(logger)
 	if err != nil {
-		logger.Fatalf("Could not create config %+v\n", err)
+		logger.Printf("Could not create config %+v\n", err)
+		return
 	}
-	application := newApplication(config, logger)
+	application, err := newApplication(config)
+	if err != nil {
+		logger.Printf("Could not create application %+v\n", err)
+		return
+	}
 	httpServer := hport.NewHttpServer(config.Cluster.CurrentPort, application, logger)
-	httpServer.Start()
+	err = httpServer.Start()
+	if err != nil {
+		logger.Printf("Http server fatal error %+v\n", err)
+		return
+	}
 }
 
-func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.Logger) app.Application {
+func newApplication( /*ctx context.Context,*/ config config.Config) (a app.Application, err error) {
 	level, err := leveldb.OpenFile(config.Db.Path, nil)
 	if err != nil {
-		logger.Fatalf("Could not open leveldb %+v\n", err)
+		return a, fmt.Errorf("Could not open leveldb %+v\n", err)
 	}
 
 	db, err := store.NewLevelAdapter(level)
 	if err != nil {
-		logger.Fatalf("Could not create level adapter %+v\n", err)
+		return a, fmt.Errorf("Could not create level adapter %+v\n", err)
 	}
 
 	httpClient := &http.Client{
@@ -65,77 +74,77 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 
 	raft, err := newRaft(&config, (*store.Fsm)(db))
 	if err != nil {
-		logger.Fatalf("failed to create raft: %v", err)
+		return a, fmt.Errorf("failed to create raft: %v", err)
 	}
 
 	addTask, err := command.NewAddTaskHandler(db, cluster, ring, config.Cluster.Current, raft)
 	if err != nil {
-		logger.Fatalf("failed to create add task handler: %v", err)
+		return a, fmt.Errorf("failed to create add task handler: %v", err)
 	}
 
 	updateTask, err := command.NewUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, raft)
 	if err != nil {
-		logger.Fatalf("failed to create update task handler: %v", err)
+		return a, fmt.Errorf("failed to create update task handler: %v", err)
 	}
 
 	ownerReg, err := command.NewOwnerRegHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
 	if err != nil {
-		logger.Fatalf("failed to create owner registration handler: %v", err)
+		return a, fmt.Errorf("failed to create owner registration handler: %v", err)
 	}
 
 	ownerUnReg, err := command.NewOwnerUnRegHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
 	if err != nil {
-		logger.Fatalf("failed to create owner unregistration handler: %v", err)
+		return a, fmt.Errorf("failed to create owner unregistration handler: %v", err)
 	}
 
 	searchDeleteTask, err := command.NewSearchDeleteTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
 	if err != nil {
-		logger.Fatalf("failed to create search delete task handler: %v", err)
+		return a, fmt.Errorf("failed to create search delete task handler: %v", err)
 	}
 
 	searchDeleteErrorTask, err := command.NewSearchDeleteErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
 	if err != nil {
-		logger.Fatalf("failed to create search delete error task handler: %v", err)
+		return a, fmt.Errorf("failed to create search delete error task handler: %v", err)
 	}
 
 	searchUpdateTask, err := command.NewSearchUpdateTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
 	if err != nil {
-		logger.Fatalf("failed to create search update task handler: %v", err)
+		return a, fmt.Errorf("failed to create search update task handler: %v", err)
 	}
 
 	searchUpdateErrorTask, err := command.NewSearchUpdateErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers, raft)
 	if err != nil {
-		logger.Fatalf("failed to create search update error task handler: %v", err)
+		return a, fmt.Errorf("failed to create search update error task handler: %v", err)
 	}
 
 	healthCheck, err := command.NewHealthCheckHandler(db, raft)
 	if err != nil {
-		logger.Fatalf("failed to create health check handler: %v", err)
+		return a, fmt.Errorf("failed to create health check handler: %v", err)
 	}
 
 	getFirstInGroup, err := query.NewGetFirstInGroupHandler(db, cluster, ring, config.Cluster.Current)
 	if err != nil {
-		logger.Fatalf("failed to create get first in group handler: %v", err)
+		return a, fmt.Errorf("failed to create get first in group handler: %v", err)
 	}
 
 	pool, err := query.NewPoolHandler(db, cluster, ring, config.Cluster.Current, servers)
 	if err != nil {
-		logger.Fatalf("failed to create pool handler: %v", err)
+		return a, fmt.Errorf("failed to create pool handler: %v", err)
 	}
 
 	get, err := query.NewGetHandler(db, cluster, ring, config.Cluster.Current)
 	if err != nil {
-		logger.Fatalf("failed to create get handler: %v", err)
+		return a, fmt.Errorf("failed to create get handler: %v", err)
 	}
 
 	searchTask, err := query.NewSearchTaskHandler(db, cluster, ring, config.Cluster.Current, servers)
 	if err != nil {
-		logger.Fatalf("failed to create search task handler: %v", err)
+		return a, fmt.Errorf("failed to create search task handler: %v", err)
 	}
 
 	searchError, err := query.NewSearchErrorTaskHandler(db, cluster, ring, config.Cluster.Current, servers)
 	if err != nil {
-		logger.Fatalf("failed to create search error task handler: %v", err)
+		return a, fmt.Errorf("failed to create search error task handler: %v", err)
 	}
 
 	return app.Application{
@@ -157,7 +166,7 @@ func newApplication( /*ctx context.Context,*/ config config.Config, logger *log.
 			SearchTask:      searchTask,
 			SearchError:     searchError,
 		},
-	}
+	}, nil
 }
 
 func newRaft(config *config.Config, fsm *store.Fsm) (*raft.Raft, error) {

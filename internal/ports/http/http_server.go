@@ -72,7 +72,7 @@ func NewHttpServer(port string, app app.Application, logger *log.Logger) HttpSer
 	}
 }
 
-func (h *HttpServer) Start() {
+func (h *HttpServer) Start() error {
 	http.HandleFunc("GET /healthz", h.HealthCheck())
 	http.HandleFunc("POST /task", h.handle(Add))
 	http.HandleFunc("PATCH /task", h.handle(Update))
@@ -114,7 +114,7 @@ func (h *HttpServer) Start() {
 		defer cancel()
 		server.SetKeepAlivesEnabled(false)
 		if err := server.Shutdown(ctx); err != nil {
-			h.logger.Fatalf("Could not gracefully shutdown the server %+v\n", err)
+			h.logger.Printf("Could not gracefully shutdown the server %+v\n", err)
 		}
 		close(done)
 	}()
@@ -122,11 +122,13 @@ func (h *HttpServer) Start() {
 	h.logger.Printf("Server starting at port %v ...", h.port)
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		h.logger.Fatalf("Could not listen on :%v %+v\n", h.port, err)
+		return fmt.Errorf("could not listen on port %v: %v", h.port, err)
 	}
 
 	<-done
 	h.logger.Println("Server stopped")
+
+	return nil
 }
 
 func (h *HttpServer) setHealthy(val int32) {

@@ -83,7 +83,7 @@ func (h SearchUpdateErrorTaskHandler) Handle(
 	size *uint,
 	internal bool,
 ) (err error) {
-	if condition != nil && len(condition.Operations) == 0 && len(condition.Operations) == 0 {
+	if condition != nil && len(condition.Operations) == 0 && len(condition.Conditions) == 0 {
 		return errors.New("condition is empty")
 	}
 
