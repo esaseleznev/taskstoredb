@@ -29,7 +29,6 @@ func (a HttpClusterAdapter) isError(resp *http.Response) error {
 	if ct != "" {
 		mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
 		if mediaType == "application/json" {
-			defer resp.Body.Close()
 			var r contract.ErrorResponse
 			err := json.NewDecoder(resp.Body).Decode(&r)
 			if err != nil {

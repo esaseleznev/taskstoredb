@@ -13,10 +13,13 @@ func (a HttpClusterAdapter) Pool(
 	kind string,
 ) (tasks []contract.Task, err error) {
 	resp, err := a.client.Get(url + "/pool/" + owner + "/kind/" + kind + "?internal=true")
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("request url %v error: %v", url, err)
 	}
-	defer resp.Body.Close()
 
 	err = a.isError(resp)
 	if err != nil {

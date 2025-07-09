@@ -12,10 +12,12 @@ func (a HttpClusterAdapter) GetFirstInGroup(
 	group string,
 ) (id string, err error) {
 	resp, err := a.client.Get(url + "/task/group/" + group)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return id, fmt.Errorf("request url %v error: %v", url, err)
 	}
-	defer resp.Body.Close()
 
 	err = a.isError(resp)
 	if err != nil {

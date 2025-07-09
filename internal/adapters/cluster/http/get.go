@@ -13,14 +13,16 @@ func (a HttpClusterAdapter) Get(
 	id string,
 ) (task *contract.Task, err error) {
 	resp, err := a.client.Get(url + "/task/" + id + "/group/" + group)
-	if err != nil {
-		return task, fmt.Errorf("request url %v error: %v", url, err)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
 	}
-	defer resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("request url %v error: %v", url, err)
+	}
 
 	err = a.isError(resp)
 	if err != nil {
-		return task, fmt.Errorf("request url %v error: %v", url, err)
+		return nil, fmt.Errorf("request url %v error: %v", url, err)
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(task)

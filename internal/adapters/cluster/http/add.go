@@ -28,10 +28,12 @@ func (a HttpClusterAdapter) Add(
 	}
 
 	resp, err := a.client.Post(url+"/task", "application/json", bytes.NewBuffer(json_data))
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return id, fmt.Errorf("request url %v error: %v", url, err)
 	}
-	defer resp.Body.Close()
 
 	err = a.isError(resp)
 	if err != nil {

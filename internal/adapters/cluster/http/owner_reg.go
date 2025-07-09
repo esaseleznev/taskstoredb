@@ -28,10 +28,12 @@ func (a HttpClusterAdapter) OwnerReg(url string, owner string, kinds []string) (
 	}
 
 	resp, err := a.client.Do(req)
+	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return fmt.Errorf("request url %v error: %v", url, err)
 	}
-	defer resp.Body.Close()
 
 	err = a.isError(resp)
 	if err != nil {
